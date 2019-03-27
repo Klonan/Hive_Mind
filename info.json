@@ -1,0 +1,11 @@
+{
+  "name": "Hive_Mind",
+  "version": "0.1.0",
+  "title": "Hive Mind",
+  "author": "Klonan",
+  "contact": "",
+  "homepage": "",
+  "description": "Take control of the biters and lead them to victory against the invading engineers.",
+  "dependencies": ["base >= 0.17.0", "Unit_Control >= 0.1.0"],
+  "factorio_version": "0.17"
+}

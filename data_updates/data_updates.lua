@@ -1,0 +1,1 @@
+require("data_updates/adjust_biters")
