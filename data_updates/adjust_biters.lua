@@ -23,7 +23,7 @@ local make_biter_item = function(prototype)
     localised_description = prototype.pollution_to_join_attack,
     icon = prototype.icon,
     icon_size = prototype.icon_size,
-    stack_size = 10,
+    stack_size = 1,
     order = prototype.order or prototype.name,
     subgroup = "biter-deployer",
   }

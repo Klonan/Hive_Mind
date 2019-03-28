@@ -67,13 +67,18 @@ local check_deployer = function(entity)
   local inventory = entity.get_inventory(defines.inventory.assembling_machine_output)
   local contents = inventory.get_contents()
   local entities = game.entity_prototypes
+  local pollution = entity.surface.get_pollution(entity.position)
   for name, count in pairs (contents) do
     --Simplified way for now, maybe map item to entity later...
     local prototype = entities[name]
     if prototype then
-      deployed_count = deploy_unit(entity, prototype, count)
-      if deployed_count > 0 and entity.valid then
-        entity.remove_item{name = name, count = deployed_count}
+      local required_pollution = prototype.pollution_to_join_attack
+      if required_pollution <= pollution then
+        pollution = pollution - required_pollution        
+        deployed_count = deploy_unit(entity, prototype, count)
+        if deployed_count > 0 and entity.valid then
+          entity.remove_item{name = name, count = deployed_count}
+        end
       end
     end
   end
