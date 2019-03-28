@@ -45,29 +45,33 @@ local deploy_unit = function(source, prototype, count)
   return deployed
 end
 
-local no_recipe_check_again = 300
-local update_interval = 60
 
 -- so if it takes 2 pollution to send a unit, the energy required is 2,000,000
 local pollution_scale = 1000000
 
 --Max pollution each spawner can absorb is 10% of whatever the chunk has.
-local pollution_max_percent = 0.25
-local min_to_take = 2
+local pollution_max_percent = 0.1
+local min_to_take = 1
 
 local check_deployer = function(entity)
+
   if not (entity and entity.valid) then return end
-  --game.print("Checking entity: "..entity.name)
+
+
   local recipe = entity.get_recipe()
   if not recipe then
-    --No recipe, so lets check this guy again in some ticks
-    local check_tick = game.tick + no_recipe_check_again
-    data.tick_check[check_tick] = data.tick_check[check_tick] or {}
-    data.tick_check[check_tick][entity.unit_number] = entity
+    entity.active = false
     return
   end
 
   local pollution = entity.surface.get_pollution(entity.position)
+  if pollution == 0 then
+    entity.active = false
+    return
+  end
+
+  entity.active = true
+
   local pollution_to_take = math.max(math.min(pollution, min_to_take), pollution * pollution_max_percent)
 
   local added_progress = pollution_to_take * pollution_scale
@@ -80,34 +84,34 @@ local check_deployer = function(entity)
     new_progress = new_progress - max_progress
     -- Fragile!
     local prototype = game.entity_prototypes[recipe.name]
-    deployed_count = deploy_unit(entity, prototype, 1)
+    deploy_unit(entity, prototype, 1)
   end
 
   entity.crafting_progress = new_progress / max_progress
   entity.surface.pollute(entity.position, -pollution_to_take)
 
-  local check_tick = game.tick + update_interval
-  data.tick_check[check_tick] = data.tick_check[check_tick] or {}
-  data.tick_check[check_tick][entity.unit_number] = entity
-
-
 end
 
+local update_interval = 60
+
 local on_built_entity = function(event)
-  local entity = event.created_entity
+  local entity = event.created_entity or event.entity
   if not (entity and entity.valid) then return end
   if not (map[entity.name]) then return end
-  data.machines[entity.unit_number] = entity
-  check_deployer(entity)
+  local update_tick = 1 + event.tick + (entity.unit_number % update_interval)
+  data.tick_check[update_tick] = data.tick_check[update_tick] or {}
+  data.tick_check[update_tick][entity.unit_number] = entity
 end
 
 local on_tick = function(event)
-  local entities = data.tick_check[event.tick]
+  local tick = event.tick
+  local entities = data.tick_check[tick]
   if not entities then return end
+  data.tick_check[tick + update_interval] = entities
   for unit_number, entity in pairs (entities) do
     check_deployer(entity)
   end
-  data.tick_check[event.tick] = nil
+  data.tick_check[tick] = nil
 end
 
 local events =
