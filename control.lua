@@ -6,7 +6,7 @@ util = require("script/script_util")
 
 local libs = {
   --debug = require "script/debug",
-  --unit_deployment = require("script/unit_deployment"),
+  unit_deployment = require("script/unit_deployment"),
 }
 
 --libs.debug.libs = libs
