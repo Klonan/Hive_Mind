@@ -53,7 +53,7 @@ local pollution_scale = 1000000
 
 --Max pollution each spawner can absorb is 10% of whatever the chunk has.
 local pollution_max_percent = 0.25
-local min_to_take = 1
+local min_to_take = 2
 
 local check_deployer = function(entity)
   if not (entity and entity.valid) then return end
