@@ -46,6 +46,15 @@ local deploy_unit = function(source, prototype, count)
 end
 
 local no_recipe_check_again = 300
+local update_interval = 60
+
+-- so if it takes 2 pollution to send a unit, the energy required is 2,000,000
+local pollution_scale = 1000000
+
+--Max pollution each spawner can absorb is 10% of whatever the chunk has.
+local pollution_max_percent = 0.25
+local min_to_take = 1
+
 local check_deployer = function(entity)
   if not (entity and entity.valid) then return end
   --game.print("Checking entity: "..entity.name)
@@ -57,31 +66,30 @@ local check_deployer = function(entity)
     data.tick_check[check_tick][entity.unit_number] = entity
     return
   end
-  local progress = entity.crafting_progress
-  local speed = entity.crafting_speed --How much energy per second
-  local remaining_ticks = 1 + math.ceil(((recipe.energy * (1 - progress)) / speed) * 60)
-  local check_tick = game.tick + remaining_ticks
+
+  local pollution = entity.surface.get_pollution(entity.position)
+  local pollution_to_take = math.max(math.min(pollution, min_to_take), pollution * pollution_max_percent)
+
+  local added_progress = pollution_to_take * pollution_scale
+  local max_progress = recipe.energy
+
+  local progress_percent = entity.crafting_progress
+  local progress_amount = progress_percent * max_progress
+  local new_progress = progress_amount + added_progress
+  while new_progress >= max_progress do
+    new_progress = new_progress - max_progress
+    -- Fragile!
+    local prototype = game.entity_prototypes[recipe.name]
+    deployed_count = deploy_unit(entity, prototype, 1)
+  end
+
+  entity.crafting_progress = new_progress / max_progress
+  entity.surface.pollute(entity.position, -pollution_to_take)
+
+  local check_tick = game.tick + update_interval
   data.tick_check[check_tick] = data.tick_check[check_tick] or {}
   data.tick_check[check_tick][entity.unit_number] = entity
 
-  local inventory = entity.get_inventory(defines.inventory.assembling_machine_output)
-  local contents = inventory.get_contents()
-  local entities = game.entity_prototypes
-  local pollution = entity.surface.get_pollution(entity.position)
-  for name, count in pairs (contents) do
-    --Simplified way for now, maybe map item to entity later...
-    local prototype = entities[name]
-    if prototype then
-      local required_pollution = prototype.pollution_to_join_attack
-      if required_pollution <= pollution then
-        pollution = pollution - required_pollution        
-        deployed_count = deploy_unit(entity, prototype, count)
-        if deployed_count > 0 and entity.valid then
-          entity.remove_item{name = name, count = deployed_count}
-        end
-      end
-    end
-  end
 
 end
 
