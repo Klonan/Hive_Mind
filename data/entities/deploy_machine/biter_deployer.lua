@@ -3,8 +3,8 @@ local graphics = util.copy(data.raw["unit-spawner"]["biter-spawner"])
 
 for k, animation in pairs (graphics.animations) do
   for k, layer in pairs (animation.layers) do
-    layer.animation_speed = 100
-    layer.hr_version.animation_speed = 100
+    layer.animation_speed = 0.5
+    layer.hr_version.animation_speed = 0.5
   end
 end
 
@@ -13,16 +13,20 @@ machine.name = name
 machine.localised_name = name
 machine.icon = graphics.icon
 machine.icon_size = graphics.icon_size
-machine.collision_box = {{-2.8, -2.8},{2.8, 2.8}}
+machine.collision_box = {{-2.6, -2.6},{2.6, 2.6}}
 machine.selection_box = {{-3, -3},{3, 3}}
 machine.crafting_categories = {name}
-machine.crafting_speed = 0.01
+machine.crafting_speed = 1
 machine.ingredient_count = 100
 machine.module_specification = nil
 machine.minable = {result = name, mining_time = 5}
-machine.flags = {"placeable-neutral", "player-creation", "no-automated-item-removal"}
+machine.flags = {"placeable-off-grid", "placeable-neutral", "player-creation", "no-automated-item-removal"}
 machine.is_deployer = true
 machine.next_upgrade = nil
+machine.dying_sound = graphics.dying_sound
+machine.corpse = graphics.corpse
+machine.dying_explosion = graphics.dying_explosion
+
 machine.always_draw_idle_animation = true
 machine.animation =
 {

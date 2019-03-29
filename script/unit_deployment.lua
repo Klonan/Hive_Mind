@@ -47,30 +47,42 @@ end
 
 
 -- so if it takes 2 pollution to send a unit, the energy required is 2,000,000
-local pollution_scale = 1000000
+local pollution_scale = 10
 
 --Max pollution each spawner can absorb is 10% of whatever the chunk has.
 local pollution_max_percent = 0.1
 local min_to_take = 1
 
-local check_deployer = function(entity)
+local prototype_cache = {}
 
+local get_prototype = function(name)
+  local prototype = prototype_cache[name]
+  if prototype then return prototype end
+  prototype = game.entity_prototypes[name]
+  prototype_cache[name] = prototype
+  return prototype
+end
+
+local check_spawner = function(spawner_data)
+
+  local entity = spawner_data.entity
   if not (entity and entity.valid) then return end
 
+  entity.surface.create_entity{name = "flying-text", position = entity.position, text = game.tick % 60}
 
   local recipe = entity.get_recipe()
   if not recipe then
-    entity.active = false
     return
   end
-
+  local prototype = get_prototype(recipe.name)
   local pollution = entity.surface.get_pollution(entity.position)
+    --[[
   if pollution == 0 then
-    entity.active = false
-    return
-  end
+    --entity.active = false
+    --return
+  end]]
 
-  entity.active = true
+  --entity.active = true
 
   local pollution_to_take = math.max(math.min(pollution, min_to_take), pollution * pollution_max_percent)
 
@@ -83,24 +95,61 @@ local check_deployer = function(entity)
   while new_progress >= max_progress do
     new_progress = new_progress - max_progress
     -- Fragile!
-    local prototype = game.entity_prototypes[recipe.name]
     deploy_unit(entity, prototype, 1)
+    entity.force.item_production_statistics.on_flow(recipe.name, 1)
+  end
+
+  local item_count = entity.get_item_count(recipe.name)
+  if item_count > 0 then
+    deploy_unit(entity, prototype, item_count)
+    entity.remove_item{name = recipe.name, count = item_count}
   end
 
   entity.crafting_progress = new_progress / max_progress
   entity.surface.pollute(entity.position, -pollution_to_take)
 
+  local progress_bar = spawner_data.progress_bar
+  if not progress_bar then
+    local background = rendering.draw_line
+    {
+      color = {r = 0, b = 0, g = 0},
+      width = 10,
+      from = entity,
+      from_offset = {-33/32, 1},
+      to = entity,
+      to_offset = {33/32, 1},
+      surface = entity.surface,
+      forces = {entity.force}
+    }
+    progress_bar = rendering.draw_line
+    {
+      color = {r = 1, g = 0.5},
+      width = 8,
+      from = entity,
+      from_offset = {-1, 1},
+      to = entity,
+      to_offset = {1, 1},
+      surface = entity.surface,
+      forces = {entity.force}
+    }
+    spawner_data.progress_bar = progress_bar
+  end
+  rendering.set_to(spawner_data.progress_bar, entity, {(2 * (new_progress / max_progress)) - 1, 1})
+
 end
 
-local update_interval = 60
+-- So, 59, so that its not exactly 60. Which means over a minute or so, each spawner will 'go first' at the pollution.
+local update_interval = 59
 
 local on_built_entity = function(event)
   local entity = event.created_entity or event.entity
   if not (entity and entity.valid) then return end
   if not (map[entity.name]) then return end
+
+  local spawner_data = {entity = entity}
   local update_tick = 1 + event.tick + (entity.unit_number % update_interval)
   data.tick_check[update_tick] = data.tick_check[update_tick] or {}
-  data.tick_check[update_tick][entity.unit_number] = entity
+  data.tick_check[update_tick][entity.unit_number] = spawner_data
 end
 
 local on_tick = function(event)
@@ -108,8 +157,8 @@ local on_tick = function(event)
   local entities = data.tick_check[tick]
   if not entities then return end
   data.tick_check[tick + update_interval] = entities
-  for unit_number, entity in pairs (entities) do
-    check_deployer(entity)
+  for unit_number, spawner_data in pairs (entities) do
+    check_spawner(spawner_data)
   end
   data.tick_check[tick] = nil
 end
