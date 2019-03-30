@@ -27,6 +27,8 @@ machine.dying_sound = graphics.dying_sound
 machine.corpse = graphics.corpse
 machine.dying_explosion = graphics.dying_explosion
 
+machine.minable = nil
+
 machine.always_draw_idle_animation = true
 machine.animation =
 {

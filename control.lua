@@ -7,6 +7,7 @@ util = require("script/script_util")
 local libs = {
   --debug = require "script/debug",
   unit_deployment = require("script/unit_deployment"),
+  hive_mind = require("script/hive_mind"),
 }
 
 --libs.debug.libs = libs

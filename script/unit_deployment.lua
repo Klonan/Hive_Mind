@@ -211,7 +211,7 @@ local check_ghost = function(ghost_data)
   local command =
   {
     type = defines.command.compound,
-    structure_type = defines.compound_command.return_last,
+    structure_type = defines.compound_command.logical_and,
     commands =
     {
       {
@@ -368,6 +368,7 @@ local events =
   [defines.events.on_built_entity] = on_built_entity,
   [defines.events.on_robot_built_entity] = on_built_entity,
   [defines.events.script_raised_revive] = on_built_entity,
+  [defines.events.script_raised_built] = on_built_entity,
   [defines.events.on_tick] = on_tick
 }
 

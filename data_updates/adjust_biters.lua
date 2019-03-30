@@ -93,6 +93,7 @@ for k, name in pairs (biter_names) do
   biter.radar_range = biter.radar_range or 2
   make_biter_item(biter, names.deployers.biter_deployer)
   make_biter_recipe(biter, names.deployers.biter_deployer)
+  biter.friendly_map_color = {b = 1, g = 1}
 end
 
 for k, name in pairs (spitter_names) do

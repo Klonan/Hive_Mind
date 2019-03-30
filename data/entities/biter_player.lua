@@ -28,7 +28,9 @@ local make_biter_player = function(name, graphics)
       running_with_gun = player.animations[1].running_with_gun
     }
   }
-  player.running_speed = graphics.movement_speed
+  player.resistances = graphics.resistances
+  player.running_speed = graphics.movement_speed * 0.75
+  player.distance_per_frame = graphics.distance_per_frame
   player.crafting_categories = nil
 
   player.collision_box = graphics.collision_box
@@ -44,7 +46,6 @@ local make_biter_player = function(name, graphics)
       color = {r=1.0, g = 0.2, b = 0.2}
     }
   }
-  player.distance_per_frame = graphics.distance_per_frame
   player.ticks_to_keep_gun = 0
   player.ticks_to_keep_aiming_direction = 0
   player.character_corpse = nil
@@ -54,6 +55,7 @@ local make_biter_player = function(name, graphics)
   player.healing_per_tick = graphics.healing_per_tick
   player.tool_attack_distance = graphics.attack_parameters.range + 1
   player.tool_attack_result = graphics.attack_parameters.ammo_type.action
+  player.collision_mask = util.ground_unit_collision_mask()
   data:extend{player}
 end
 
