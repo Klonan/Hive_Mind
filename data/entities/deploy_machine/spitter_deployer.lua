@@ -73,7 +73,7 @@ local subgroup =
   type = "item-subgroup",
   name = name,
   group = "combat",
-  order = "b"
+  order = "c"
 }
 --[[
 

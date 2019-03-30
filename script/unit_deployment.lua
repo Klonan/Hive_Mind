@@ -181,7 +181,11 @@ end
 local required_pollution =
 {
   [names.biter_deployer] = 100,
-  [names.spitter_deployer] = 200
+  [names.spitter_deployer] = 200,
+  ["small-worm-turret"] = 50,
+  ["medium-worm-turret"] = 150,
+  ["big-worm-turret"] = 400,
+  ["behemoth-worm-turret"] = 1000
 }
 
 local check_ghost = function(ghost_data)
@@ -202,13 +206,24 @@ local check_ghost = function(ghost_data)
   end
 
   local origin = entity.position
-  local r = get_prototype(entity.ghost_name).radius * 4
+  local r = 16
   local area = {{x = origin.x - r, y = origin.y - r}, {x = origin.x + r, y = origin.y + r}}
   local command =
   {
-    type = defines.command.go_to_location,
-    destination_entity = entity,
-    radius = 1
+    type = defines.command.compound,
+    structure_type = defines.compound_command.return_last,
+    commands =
+    {
+      {
+        type = defines.command.go_to_location,
+        destination_entity = entity,
+        radius = 0.5
+      },
+      {
+        type = defines.command.stop,
+        ticks_to_wait = 60
+      }
+    }
   }
   local needed_pollution = ghost_data.required_pollution
   local check_control = false --  remote.interfaces["unit_control"]
@@ -291,7 +306,7 @@ local on_built_entity = function(event)
 
   if entity.type == "entity-ghost" then
     local ghost_name = entity.ghost_name
-    if spawner_map[ghost_name] then
+    if required_pollution[ghost_name] then
       return spawner_ghost_built(entity, event.tick)
     end
   end

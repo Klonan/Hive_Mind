@@ -8,4 +8,9 @@ data.deployers =
   spitter_deployer = "spitter-deployer"
 }
 
+data.players =
+{
+  biter_player = "biter-player"
+}
+
 return data
