@@ -68,10 +68,18 @@ local check_spawner = function(spawner_data)
   local entity = spawner_data.entity
   if not (entity and entity.valid) then return end
 
-  entity.surface.create_entity{name = "flying-text", position = entity.position, text = game.tick % 60}
+  --entity.surface.create_entity{name = "flying-text", position = entity.position, text = game.tick % 60}
 
   local recipe = entity.get_recipe()
   if not recipe then
+    if spawner_data.background then
+      rendering.destroy(spawner_data.background)
+      spawner_data.background = nil
+    end
+    if spawner_data.progress_bar then
+      rendering.destroy(spawner_data.progress_bar)
+      spawner_data.progress_bar = nil
+    end
     return
   end
   local prototype = get_prototype(recipe.name)
@@ -108,9 +116,9 @@ local check_spawner = function(spawner_data)
   entity.crafting_progress = new_progress / max_progress
   entity.surface.pollute(entity.position, -pollution_to_take)
 
-  local progress_bar = spawner_data.progress_bar
-  if not progress_bar then
-    local background = rendering.draw_line
+  local background = spawner_data.background
+  if not background then
+    background = rendering.draw_line
     {
       color = {r = 0, b = 0, g = 0},
       width = 10,
@@ -121,6 +129,11 @@ local check_spawner = function(spawner_data)
       surface = entity.surface,
       forces = {entity.force}
     }
+    spawner_data.background = background
+  end
+
+  local progress_bar = spawner_data.progress_bar
+  if not progress_bar then
     progress_bar = rendering.draw_line
     {
       color = {r = 1, g = 0.5},
@@ -141,26 +154,36 @@ end
 -- So, 59, so that its not exactly 60. Which means over a minute or so, each spawner will 'go first' at the pollution.
 local update_interval = 59
 
+local spawner_built = function(entity, tick)
+  local spawner_data = {entity = entity}
+  local update_tick = 1 + tick + (entity.unit_number % update_interval)
+  data.tick_check[update_tick] = data.tick_check[update_tick] or {}
+  data.tick_check[update_tick][entity.unit_number] = spawner_data
+end
+
 local on_built_entity = function(event)
   local entity = event.created_entity or event.entity
   if not (entity and entity.valid) then return end
-  if not (map[entity.name]) then return end
+  if (map[entity.name]) then
+    return spawner_built(entity, event.tick)
+  end
+  if (entity.type == "entity-ghost" and map[entity.ghost_name]) then
+    return spawner_ghost_built(entity, event.tick)
+  end
 
-  local spawner_data = {entity = entity}
-  local update_tick = 1 + event.tick + (entity.unit_number % update_interval)
-  data.tick_check[update_tick] = data.tick_check[update_tick] or {}
-  data.tick_check[update_tick][entity.unit_number] = spawner_data
 end
 
 local on_tick = function(event)
   local tick = event.tick
   local entities = data.tick_check[tick]
   if not entities then return end
+  --local profiler = game.create_profiler()
   data.tick_check[tick + update_interval] = entities
   for unit_number, spawner_data in pairs (entities) do
     check_spawner(spawner_data)
   end
   data.tick_check[tick] = nil
+  --game.print({"", profiler, "    "..game.tick})
 end
 
 local events =

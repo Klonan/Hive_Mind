@@ -1,5 +1,5 @@
 local machine = util.copy(data.raw["assembling-machine"]["assembling-machine-2"])
-local graphics = util.copy(data.raw["unit-spawner"]["biter-spawner"])
+local graphics = util.copy(data.raw["unit-spawner"]["spitter-spawner"])
 
 for k, animation in pairs (graphics.animations) do
   for k, layer in pairs (animation.layers) do
@@ -8,7 +8,7 @@ for k, animation in pairs (graphics.animations) do
   end
 end
 
-local name = names.deployers.biter_deployer
+local name = names.deployers.spitter_deployer
 machine.name = name
 machine.localised_name = name
 machine.icon = graphics.icon

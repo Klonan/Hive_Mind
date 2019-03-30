@@ -8,13 +8,17 @@ local biter_names ={
   "medium-biter",
   "big-biter",
   "behemoth-biter",
+}
+
+local spitter_names =
+{
   "small-spitter",
   "medium-spitter",
   "big-spitter",
   "behemoth-spitter"
 }
 
-local make_biter_item = function(prototype)
+local make_biter_item = function(prototype, subgroup)
   local item =
   {
     type = "item",
@@ -25,12 +29,12 @@ local make_biter_item = function(prototype)
     icon_size = prototype.icon_size,
     stack_size = 1,
     order = prototype.order or prototype.name,
-    subgroup = "biter-deployer",
+    subgroup = subgroup,
   }
   data:extend{item}
 end
 
-local make_biter_recipe = function(prototype)
+local make_biter_recipe = function(prototype, category)
   local recipe =
   {
     type = "recipe",
@@ -40,7 +44,7 @@ local make_biter_recipe = function(prototype)
     ingredients = {},
     energy_required = prototype.pollution_to_join_attack * 10,
     result = prototype.name,
-    category = "biter-deployer"
+    category = category
   }
   data:extend{recipe}
 end
@@ -54,6 +58,16 @@ for k, name in pairs (biter_names) do
   if not biter then error("No Biter with name "..name) end
   biter.collision_mask = util.ground_unit_collision_mask()
   biter.radar_range = biter.radar_range or 2
-  make_biter_item(biter)
-  make_biter_recipe(biter)
+  make_biter_item(biter, names.deployers.biter_deployer)
+  make_biter_recipe(biter, names.deployers.biter_deployer)
+end
+
+for k, name in pairs (spitter_names) do
+  local biter = units[name]
+  if not biter then error("No Spitter with name "..name) end
+  biter.collision_mask = util.ground_unit_collision_mask()
+  biter.radar_range = biter.radar_range or 2
+  make_biter_item(biter, names.deployers.spitter_deployer)
+  make_biter_recipe(biter, names.deployers.spitter_deployer)
+  biter.ai_settings.destroy_when_commands_fail = false
 end
