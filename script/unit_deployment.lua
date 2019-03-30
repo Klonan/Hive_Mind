@@ -158,7 +158,8 @@ local try_to_revive_spawner = function(entity)
   local revived = entity.revive({raise_revive = true})
   if revived then
     for name, count in pairs (units) do
-      deploy_unit(entity, get_prototype(name), count)
+      game.print("oh right!")
+      deploy_unit(revived, get_prototype(name), count)
     end
     return true
   end

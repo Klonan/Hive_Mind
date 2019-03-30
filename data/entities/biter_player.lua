@@ -36,9 +36,9 @@ local make_biter_player = function(name, graphics)
   player.collision_box = graphics.collision_box
   player.selection_box = graphics.selection_box
   player.ticks_to_stay_in_combat = 0
-  player.inventory_size = 10
-  player.light =
-  {
+  player.inventory_size = 0
+  player.light = nil
+  local old_light = {
     {
       minimum_darkness = 0,
       intensity = 0.8,
