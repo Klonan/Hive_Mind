@@ -92,7 +92,7 @@ local check_spawner = function(spawner_data)
   local pollution_to_take = math.max(math.min(pollution, min_to_take), pollution * pollution_max_percent)
 
   local max_progress = recipe.energy
-  pollution_to_take = math.min(pollution_to_take, max_progress * pollution_max_percent_as_progress)
+  pollution_to_take = math.min(pollution_to_take, (max_progress * pollution_max_percent_as_progress) / pollution_scale)
   local added_progress = pollution_to_take * pollution_scale
 
   local progress_percent = entity.crafting_progress

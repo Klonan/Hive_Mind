@@ -1,5 +1,10 @@
 local names = require("shared")
 
+local script_data =
+{
+  player_lights = {}
+}
+
 local recipe_evolution_factors =
 {
   ["small-biter"] = 0,
@@ -28,6 +33,8 @@ local get_hivemind_force = function()
   local force = game.create_force("hivemind")
   local enemy_force = game.forces.enemy
   enemy_force.set_cease_fire(force, true)
+  enemy_force.set_friend(force, true)
+  enemy_force.share_chart = true
   force.set_cease_fire(enemy_force, true)
   force.disable_research()
   force.evolution_factor = enemy_force.evolution_factor
@@ -45,16 +52,53 @@ local deploy_map =
 }
 
 local add_biter_light = function(player)
-  rendering.draw_light{
+  local index = script_data.player_lights[player.index]
+  if index and rendering.is_valid(index) then return end
+  script_data.player_lights[player.index] = rendering.draw_light{
     sprite = "utility/light_medium",
     scale = 50,
     intensity = 0.8,
     color = {r = 0.8, b = 0.2, g = 0.2},
     target = player.character,
     surface = player.surface,
-    players = {player},
+    forces = {player.force},
     minimum_darkness = 0
   }
+end
+
+local quickbar =
+{
+  names.deployers.biter_deployer,
+  names.deployers.spitter_deployer,
+  "small-worm-turret",
+  "medium-worm-turret",
+  "big-worm-turret",
+  "behemoth-worm-turret"
+}
+
+local area = function(position, radius)
+  return {{position.x - radius, position.y - radius},{position.x + radius, position.y + radius}}
+end
+
+local get_hive_entities = function(entity)
+  local map = {}
+  local surface = entity.surface
+  local find = surface.find_entities_filtered
+  local params = {force = "enemy"}
+  local radius = 8
+  local count = 1
+  local function recursive_find_neighbors(entity)
+    if map[entity.unit_number] then return end
+    map[entity.unit_number] = entity
+    params.area = area(entity.position, radius)
+    for k, nearby in pairs (find(params)) do
+      recursive_find_neighbors(nearby)
+      count = count + 1
+    end
+  end
+  recursive_find_neighbors(entity)
+  game.print(count)
+  return map
 end
 
 local join_hive = function(player)
@@ -82,8 +126,8 @@ local join_hive = function(player)
   local force = get_hivemind_force()
   force.set_spawn_position(position, surface)
   local radius = 64
-  local area = {{position.x - radius, position.y - radius},{position.x + radius, position.y + radius}}
-  for k, nearby in pairs (surface.find_entities_filtered{force = "enemy", area = area}) do
+  local entities = get_hive_entities(spawner)
+  for k, nearby in pairs (entities) do
     local deploy_name = deploy_map[nearby.name]
     if deploy_name then
       surface.create_entity{name = deploy_name, position = nearby.position, force = force, direction = nearby.direction, raise_built = true}
@@ -102,6 +146,11 @@ local join_hive = function(player)
     force = force
   }
   add_biter_light(player)
+
+  player.set_active_quick_bar_page(1, 1)
+  for k, filter in pairs (quickbar) do
+    player.set_quick_bar_slot(k, filter)
+  end
 
 
 end
@@ -170,6 +219,13 @@ local on_player_mined_entity = function(event)
 
 end
 
+local on_player_joined_game = function(event)
+  local player = game.get_player(event.player_index)
+  if player.force.name == "hivemind" then
+    add_biter_light(player)
+  end
+end
+
 
 remote.add_interface("hive_mind",
 {
@@ -180,7 +236,9 @@ local events =
 {
   [defines.events.on_player_respawned] = on_player_respawned,
   [defines.events.on_tick] = on_tick,
-  [defines.events.on_player_mined_entity] = on_player_mined_entity
+  [defines.events.on_player_mined_entity] = on_player_mined_entity,
+  [defines.events.on_player_joined_game] = on_player_joined_game,
+
 }
 
 local lib = {}
@@ -188,12 +246,12 @@ local lib = {}
 lib.get_events = function() return events end
 
 lib.on_init = function()
-  global.hive_mind = global.hive_mind or data
+  global.hive_mind = global.hive_mind or script_data
   lib.on_event = handler(events)
 end
 
 lib.on_load = function()
-  data = global.hive_mind
+  script_data = global.hive_mind or script_data
   lib.on_event = handler(events)
 end
 
