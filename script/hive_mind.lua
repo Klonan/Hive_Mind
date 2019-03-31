@@ -145,6 +145,8 @@ local join_hive = function(player)
     position = surface.find_non_colliding_position(names.players.biter_player, position, 0, 1),
     force = force
   }
+  player.character.get_inventory(defines.inventory.player_guns).insert(player.character.name.."-gun")
+  player.character.get_inventory(defines.inventory.player_ammo).insert(player.character.name.."-ammo")
   add_biter_light(player)
 
   player.set_active_quick_bar_page(1, 1)

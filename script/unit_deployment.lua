@@ -319,6 +319,18 @@ local spawner_built = function(entity, tick)
     force = entity.force
   } or error("Couldn't build radar proxy for some reason...")
   entity.destructible = false
+
+  rendering.draw_light{
+    sprite = "utility/light_medium",
+    scale = 2,
+    intensity = 0.8,
+    color = {r = 0.8},
+    target = entity,
+    surface = entity.surface,
+    forces = {entity.force},
+    minimum_darkness = 0
+  }
+
   local spawner_data = {entity = entity, proxy = radar_proxy}
   data.proxies[radar_proxy.unit_number] = spawner_data
   local update_tick = 1 + tick + (entity.unit_number % spawners_update_interval)

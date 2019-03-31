@@ -53,6 +53,7 @@ machine.fluid_boxes =
 machine.scale_entity_info_icon = true
 machine.energy_source = {type = "void"}
 machine.create_ghost_on_death = false
+machine.friendly_map_color = {g = 1}
 
 local item = {
   type = "item",

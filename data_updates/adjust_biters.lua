@@ -96,6 +96,7 @@ for k, name in pairs (biter_names) do
   make_biter_recipe(biter, names.deployers.biter_deployer)
   biter.ai_settings.destroy_when_commands_fail = false
   biter.friendly_map_color = {b = 1, g = 1}
+  biter.affected_by_tiles = biter.affected_by_tiles or true
 end
 
 for k, name in pairs (spitter_names) do
@@ -106,6 +107,7 @@ for k, name in pairs (spitter_names) do
   make_biter_recipe(biter, names.deployers.spitter_deployer)
   biter.ai_settings.destroy_when_commands_fail = false
   biter.friendly_map_color = {b = 1, g = 1}
+  biter.affected_by_tiles = biter.affected_by_tiles or true
 end
 
 for k, name in pairs (worm_names) do
@@ -113,4 +115,5 @@ for k, name in pairs (worm_names) do
   make_worm_item(turret)
   table.insert(turret.flags, "player-creation")
   turret.create_ghost_on_death = false
+  turret.friendly_map_color = {b = 1, g = 0.5}
 end

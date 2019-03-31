@@ -57,7 +57,45 @@ local make_biter_player = function(name, graphics)
   player.tool_attack_result = graphics.attack_parameters.ammo_type.action
   player.collision_mask = util.ground_unit_collision_mask()
   player.mining_speed = 0.75
-  data:extend{player}
+  graphics.attack_parameters.animation = nil
+  local gun =
+  {
+    type = "gun",
+    name = name.."-gun",
+    icon = graphics.icon,
+    icon_size = graphics.icon_size,
+    subgroup = "gun",
+    order = name.."-gun",
+    attack_parameters = util.copy(graphics.attack_parameters),
+    stack_size = 1
+  }
+  gun.attack_parameters.ammo_consumption_modifier = 0
+  gun.attack_parameters.ammo_category = util.ammo_category(name)
+  gun.attack_parameters.ammo_type = nil
+  local ammo =
+  {
+    type = "ammo",
+    name = name.."-ammo",
+    icon = graphics.icon,
+    icon_size = graphics.icon_size,
+    ammo_type = graphics.attack_parameters.ammo_type,
+    magazine_size = 1,
+    subgroup = "ammo",
+    order = name.."-ammo",
+    stack_size = 1
+  }
+  ammo.ammo_type.category = util.ammo_category(name)
+
+  --[[error(serpent.block{
+    ammo = ammo, gun = gun
+  })]]
+  data:extend
+  {
+    player,
+    gun,
+    ammo,
+  }
+
 end
 
 make_biter_player(names.players.biter_player, util.copy(data.raw.unit["medium-biter"]))
