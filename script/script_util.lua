@@ -39,15 +39,26 @@ util.gui_action_handler = function(event, data, functions)
 end
 
 util.center = function(area)
-  return {x = (area.left_top.x + area.right_bottom.x) / 2, y = (area.left_top.y + area.right_bottom.y) / 2}
+  local left_top = area.left_top or area[1]
+  local ltx = left_top.x or left_top[1]
+  local lty = left_top.y or left_top[2]
+  local right_bottom = area.right_bottom or area[2]
+  local rbx = right_bottom.x or right_bottom[1]
+  local rby = right_bottom.y or right_bottom[2]
+
+  return {x = (ltx + rbx) / 2, y = (lty + rby) / 2}
 end
 
 util.distance = function(p1, p2)
-  return (((p1.x - p2.x) ^ 2) + ((p1.y - p2.y) ^ 2)) ^ 0.5
+  local x1 = p1.x or p1[1]
+  local y1 = p1.y or p1[2]
+  local x2 = p2.x or p2[1]
+  local y2 = p2.y or p2[2]
+  return (((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)) ^ 0.5
 end
 
 util.radius = function(area)
-  return util.distance(area.right_bottom, area.left_top) / 2
+  return util.distance(area.right_bottom or area[1], area.left_top or area[2]) / 2
 end
 
 util.clear_item = function(entity, item_name)

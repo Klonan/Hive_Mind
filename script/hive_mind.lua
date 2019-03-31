@@ -130,9 +130,43 @@ local on_tick = function(event)
   end
 end
 
+local pollution_values =
+{
+  wood = 1,
+  coal = 1.5,
+  stone = 0.1
+}
+
 local on_player_mined_entity = function(event)
   local player = game.get_player(event.player_index)
+  if not (player and player.valid) then return end
+  local character = player.character
 
+  if not (character and character.valid and character.name == names.players.biter_player) then
+    return
+  end
+
+  local entity = event.entity
+  if not (entity and entity.valid) then return end
+
+  local buffer = event.buffer
+  if not (buffer and buffer.valid) then return end
+  local surface = entity.surface
+  local position = entity.position
+  local pollute = surface.pollute
+  local remove = buffer.remove
+  local total_pollution = 0
+  for name, count in pairs (buffer.get_contents()) do
+    local pollution = pollution_values[name]
+    if pollution then
+      total_pollution = total_pollution + (pollution * count)
+    end
+    remove{name = name, count = count}
+  end
+  if total_pollution == 0 then return end
+
+  surface.create_entity{name = "flying-text", position = position, text = "Pollution +"..total_pollution, color = {r = 1, g = 0.2, b = 0.2}}
+  pollute(position, total_pollution)
 
 end
 

@@ -50,7 +50,7 @@ local make_biter_recipe = function(prototype, category)
     localised_name = prototype.name,
     enabled = true,
     ingredients = {},
-    energy_required = prototype.pollution_to_join_attack * 10,
+    energy_required = prototype.pollution_to_join_attack * 5,
     result = prototype.name,
     category = category
   }

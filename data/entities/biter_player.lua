@@ -56,6 +56,7 @@ local make_biter_player = function(name, graphics)
   player.tool_attack_distance = graphics.attack_parameters.range + 1
   player.tool_attack_result = graphics.attack_parameters.ammo_type.action
   player.collision_mask = util.ground_unit_collision_mask()
+  player.mining_speed = 0.75
   data:extend{player}
 end
 

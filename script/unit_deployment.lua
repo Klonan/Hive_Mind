@@ -48,12 +48,13 @@ local deploy_unit = function(source, prototype, count)
 end
 
 
--- so if it takes 2 pollution to send a unit, the energy required is 20
-local pollution_scale = 10
+-- so if it takes 2 pollution to send a unit, the energy required is 10
+local pollution_scale = 5
 
 --Max pollution each spawner can absorb is 10% of whatever the chunk has.
 local pollution_max_percent = 0.1
 local min_to_take = 1
+local pollution_max_percent_as_progress = 0.5
 
 local prototype_cache = {}
 
@@ -90,8 +91,9 @@ local check_spawner = function(spawner_data)
 
   local pollution_to_take = math.max(math.min(pollution, min_to_take), pollution * pollution_max_percent)
 
-  local added_progress = pollution_to_take * pollution_scale
   local max_progress = recipe.energy
+  pollution_to_take = math.min(pollution_to_take, max_progress * pollution_max_percent_as_progress)
+  local added_progress = pollution_to_take * pollution_scale
 
   local progress_percent = entity.crafting_progress
   local progress_amount = progress_percent * max_progress
@@ -147,31 +149,53 @@ local check_spawner = function(spawner_data)
 
 end
 
-local try_to_revive_spawner = function(entity)
+local teleport_unit_away = function(unit, area)
+  local center = util.center(area)
+  local position = unit.position
+  local dx = position.x - center.x
+  local dy = position.y - center.y
+  local radius = (util.radius(area) + unit.get_radius())
+  local current_distance = ((dx * dx) + (dy * dy) ) ^ 0.5
+  if current_distance == 0 then
+    dx = radius
+    dy = radius
+  else
+    local scale_factor = radius / current_distance
+    dx = dx * scale_factor
+    dy = dy * scale_factor
+  end
+  local new_position = {x = center.x + dx, y = center.y + dy}
+  --[[
+
+    game.print(serpent.block
+    {
+      dx = dx, dy = dy,
+      center = center,
+      new_position = new_position,
+      radius = radius,
+      current_distance = current_distance
+    })
+
+    ]]
+
+  local non_collide = unit.surface.find_non_colliding_position(unit.name, new_position, 0, 0.1)
+  unit.teleport(non_collide)
+end
+
+local try_to_revive_entity = function(entity)
   local revived = entity.revive({raise_revive = true})
   if revived then return true end
+  local prototype = get_prototype(entity.ghost_name)
+  local box = prototype.collision_box
+  local origin = entity.position
+  local area = {{box.left_top.x + origin.x, box.left_top.y + origin.y},{box.right_bottom.x + origin.x, box.right_bottom.y + origin.y}}
   local units = {}
-  for k, unit in pairs (entity.surface.find_entities_filtered{area = entity.bounding_box, force = entity.force, type = "unit"}) do
-    units[unit.name] = (units[unit.name] or 0) + 1
-    unit.destroy()
+  for k, unit in pairs (entity.surface.find_entities_filtered{area = area, force = entity.force, type = "unit"}) do
+    teleport_unit_away(unit, area)
   end
   local revived = entity.revive({raise_revive = true})
   if revived then
-    for name, count in pairs (units) do
-      game.print("oh right!")
-      deploy_unit(revived, get_prototype(name), count)
-    end
     return true
-  end
-  for name, count in pairs (units) do
-    for k = 1, count do
-      surface.create_entity
-      {
-        name = name,
-        position = surface.find_non_colliding_position(name, entity.position, 0, 1),
-        force = entity.force
-      }
-    end
   end
 end
 
@@ -195,16 +219,21 @@ local check_ghost = function(ghost_data)
   local surface = entity.surface
   --entity.surface.create_entity{name = "flying-text", position = entity.position, text = ghost_data.required_pollution}
 
-  for k, unit in pairs (surface.find_entities_filtered{area = entity.bounding_box, force = entity.force, type = "unit"}) do
-    local prototype = get_prototype(unit.name)
-    local pollution = prototype.pollution_to_join_attack
-    if unit.destroy({raise_destroy = true}) then
-      ghost_data.required_pollution = ghost_data.required_pollution - pollution
-    end
-    if ghost_data.required_pollution <= 0 then
-      return try_to_revive_spawner(entity)
+  if ghost_data.required_pollution > 0 then
+    for k, unit in pairs (surface.find_entities_filtered{area = entity.bounding_box, force = entity.force, type = "unit"}) do
+      local prototype = get_prototype(unit.name)
+      local pollution = prototype.pollution_to_join_attack
+      if unit.destroy({raise_destroy = true}) then
+        ghost_data.required_pollution = ghost_data.required_pollution - pollution
+        if ghost_data.required_pollution <= 0 then break end
+      end
     end
   end
+
+  if ghost_data.required_pollution <= 0 then
+    return try_to_revive_entity(entity)
+  end
+
 
   local origin = entity.position
   local r = 16
@@ -218,10 +247,12 @@ local check_ghost = function(ghost_data)
       {
         type = defines.command.go_to_location,
         destination_entity = entity,
+        distraction = defines.distraction.by_damage,
         radius = 0.5
       },
       {
         type = defines.command.stop,
+        distraction = defines.distraction.by_damage,
         ticks_to_wait = 60
       }
     }
