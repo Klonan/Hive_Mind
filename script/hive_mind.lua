@@ -114,7 +114,7 @@ local join_hive = function(player)
       area = nil
       keep_going = false
     end
-    local spawners = surface.find_entities_filtered{area = area, type = "unit-spawner", force = "enemy", limit = 20}
+    local spawners = surface.find_entities_filtered{area = area, type = "unit-spawner", force = "enemy", limit = nil}
    local count = #spawners
    if count > 0 then
      spawner = spawners[math.random(count)]
