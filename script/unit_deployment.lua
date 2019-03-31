@@ -1,9 +1,9 @@
 local data =
 {
-  machines = {},
   spawner_tick_check = {},
   ghost_tick_check = {},
-  not_idle_units = {}
+  not_idle_units = {},
+  proxies = {}
 }
 
 local names = names.deployers
@@ -311,7 +311,16 @@ end
 local spawners_update_interval = 59
 
 local spawner_built = function(entity, tick)
-  local spawner_data = {entity = entity}
+  local radar_prototype = get_prototype(entity.name.."-radar") or error("Spawner being built does not have a radar proxy prototype "..entity.name)
+  local radar_proxy = entity.surface.create_entity
+  {
+    name = radar_prototype.name,
+    position = entity.position,
+    force = entity.force
+  } or error("Couldn't build radar proxy for some reason...")
+  entity.destructible = false
+  local spawner_data = {entity = entity, proxy = radar_proxy}
+  data.proxies[radar_proxy.unit_number] = spawner_data
   local update_tick = 1 + tick + (entity.unit_number % spawners_update_interval)
   data.spawner_tick_check[update_tick] = data.spawner_tick_check[update_tick] or {}
   data.spawner_tick_check[update_tick][entity.unit_number] = spawner_data
@@ -395,13 +404,29 @@ local on_tick = function(event)
   check_not_idle_units(event.tick)
 end
 
+local on_entity_died = function(event)
+  local entity = event.entity
+  if not (entity and entity.valid) then return end
+  local unit_number = entity.unit_number
+  if not unit_number then return end
+  local spawner_data = data.proxies[unit_number]
+  if not spawner_data then return end
+  entity.destroy()
+  data.proxies[unit_number] = nil
+  local spawner = spawner_data.entity
+  if not (spawner and spawner.valid) then return end
+  spawner.destructible = true
+  spawner.die()
+end
+
 local events =
 {
   [defines.events.on_built_entity] = on_built_entity,
   [defines.events.on_robot_built_entity] = on_built_entity,
   [defines.events.script_raised_revive] = on_built_entity,
   [defines.events.script_raised_built] = on_built_entity,
-  [defines.events.on_tick] = on_tick
+  [defines.events.on_tick] = on_tick,
+  [defines.events.on_entity_died] = on_entity_died,
 }
 
 local unit_deployment = {}

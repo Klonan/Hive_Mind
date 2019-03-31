@@ -38,6 +38,7 @@ local make_biter_item = function(prototype, subgroup)
     stack_size = 1,
     order = prototype.order or prototype.name,
     subgroup = subgroup,
+    place_result = prototype.name
   }
   data:extend{item}
 end
@@ -111,4 +112,5 @@ for k, name in pairs (worm_names) do
   local turret = data.raw.turret[name] or error("No worm with name "..name)
   make_worm_item(turret)
   table.insert(turret.flags, "player-creation")
+  turret.create_ghost_on_death = false
 end

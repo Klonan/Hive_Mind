@@ -1,3 +1,4 @@
+local util = require("data/tf_util/tf_util")
 local machine = util.copy(data.raw["assembling-machine"]["assembling-machine-2"])
 local graphics = util.copy(data.raw["unit-spawner"]["biter-spawner"])
 
@@ -51,6 +52,7 @@ machine.fluid_boxes =
 }
 machine.scale_entity_info_icon = true
 machine.energy_source = {type = "void"}
+machine.create_ghost_on_death = false
 
 local item = {
   type = "item",
@@ -92,11 +94,34 @@ local subgroup =
   }
 
   ]]
+
+local radar = util.copy(data.raw.radar.radar)
+radar.name = name.."-radar"
+radar.pictures = {layers = {util.empty_sprite()}}
+radar.energy_source = {type = "void"}
+radar.collision_box = machine.collision_box
+radar.selection_box = machine.selection_box
+radar.selectable_in_game = false
+radar.minable = nil
+radar.integration_patch = nil
+radar.working_sound = nil
+radar.vehicle_impact_sound = nil
+radar.max_distance_of_sector_revealed = 1
+radar.max_distance_of_nearby_sector_revealed = 2
+radar.resistances = machine.resistances
+radar.icon = machine.icon
+radar.icon_size = machine.icon_size
+radar.max_health = machine.max_health
+radar.corpse = nil
+radar.order = name.."-radar"
+radar.flags = machine.flags
+
 data:extend
 {
   machine,
   item,
   category,
   subgroup,
+  radar
   --recipe
 }
