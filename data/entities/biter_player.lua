@@ -1,3 +1,10 @@
+local ugly_hack = function(layers)
+  for k, layer in pairs (layers) do
+    layer.direction_count = 18
+    layer.frame_count = 9
+  end
+end
+
 local make_biter_player = function(name, graphics)
   local player = util.copy(data.raw.player.player)
   local biter_walk = graphics.run_animation
@@ -11,6 +18,9 @@ local make_biter_player = function(name, graphics)
   biter_attack.layers[3].apply_runtime_tint = true
   biter_attack.layers[3].hr_version.apply_runtime_tint = true
 
+  local running_with_gun = util.copy(biter_attack)
+  ugly_hack(running_with_gun.layers)
+
 
   local idle = util.copy(biter_walk)
   for k, layer in pairs (idle.layers) do
@@ -22,10 +32,10 @@ local make_biter_player = function(name, graphics)
   {
     {
       idle = idle,
-      idle_with_gun = idle,
+      idle_with_gun = biter_attack,
       running = biter_walk,
       mining_with_tool = biter_attack,
-      running_with_gun = player.animations[1].running_with_gun
+      running_with_gun = running_with_gun
     }
   }
   player.resistances = graphics.resistances
@@ -35,7 +45,6 @@ local make_biter_player = function(name, graphics)
 
   player.collision_box = graphics.collision_box
   player.selection_box = graphics.selection_box
-  player.ticks_to_stay_in_combat = 0
   player.inventory_size = 0
   player.light = nil
   local old_light = {
@@ -46,8 +55,6 @@ local make_biter_player = function(name, graphics)
       color = {r=1.0, g = 0.2, b = 0.2}
     }
   }
-  player.ticks_to_keep_gun = 0
-  player.ticks_to_keep_aiming_direction = 0
   player.character_corpse = nil
   player.corpse = graphics.corpse
   player.dying_explosion = graphics.dying_explosion
@@ -55,6 +62,9 @@ local make_biter_player = function(name, graphics)
   player.healing_per_tick = graphics.healing_per_tick
   player.tool_attack_distance = graphics.attack_parameters.range + 1
   player.tool_attack_result = graphics.attack_parameters.ammo_type.action
+  player.ticks_to_keep_gun = math.floor(biter_attack.layers[1].frame_count / biter_attack.layers[1].animation_speed)
+  player.ticks_to_keep_aiming_direction = 0
+  player.ticks_to_stay_in_combat = 0
   player.collision_mask = util.ground_unit_collision_mask()
   player.mining_speed = 0.75
   graphics.attack_parameters.animation = nil
