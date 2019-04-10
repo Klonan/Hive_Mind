@@ -130,7 +130,7 @@ local join_hive = function(player)
   for k, nearby in pairs (entities) do
     local deploy_name = deploy_map[nearby.name]
     if deploy_name then
-      surface.create_entity{name = deploy_name, position = nearby.position, force = force, direction = nearby.direction, raise_built = true}
+      surface.create_entity{name = deploy_name, position = nearby.position, force = force, direction = (math.random(4) - 1) * 2, raise_built = true}
       nearby.destroy()
     elseif nearby.type == "unit" or nearby.type == "turret" then
       nearby.force = force
@@ -168,6 +168,8 @@ local on_player_respawned = function(event)
     position = player.surface.find_non_colliding_position(names.players.biter_player, player.position, 0, 1),
     force = player.force
   }
+  player.character.get_inventory(defines.inventory.player_guns).insert(player.character.name.."-gun")
+  player.character.get_inventory(defines.inventory.player_ammo).insert(player.character.name.."-ammo")
   add_biter_light(player)
 
 
