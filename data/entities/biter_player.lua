@@ -2,6 +2,10 @@ local ugly_hack = function(layers)
   for k, layer in pairs (layers) do
     layer.direction_count = 18
     layer.frame_count = 9
+    if layer.hr_version then
+      layer.hr_version.direction_count = 18
+      layer.hr_version.frame_count = 9
+    end
   end
 end
 
@@ -25,6 +29,9 @@ local make_biter_player = function(name, graphics)
   local idle = util.copy(biter_walk)
   for k, layer in pairs (idle.layers) do
     layer.animation_speed = 0.0000000000000001
+    if layer.hr_version then
+      layer.hr_version.animation_speed = 0.0000000000000001
+    end
   end
 
   player.name = name
@@ -108,4 +115,7 @@ local make_biter_player = function(name, graphics)
 
 end
 
-make_biter_player(names.players.biter_player, util.copy(data.raw.unit["medium-biter"]))
+make_biter_player(names.players.small_biter_player, util.copy(data.raw.unit["small-biter"]))
+make_biter_player(names.players.medium_biter_player, util.copy(data.raw.unit["medium-biter"]))
+make_biter_player(names.players.big_biter_player, util.copy(data.raw.unit["big-biter"]))
+make_biter_player(names.players.behemoth_biter_player, util.copy(data.raw.unit["behemoth-biter"]))

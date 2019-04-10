@@ -10,7 +10,10 @@ data.deployers =
 
 data.players =
 {
-  biter_player = "biter-player"
+  small_biter_player = "small-biter-player",
+  medium_biter_player = "medium-biter-player",
+  big_biter_player = "big-biter-player",
+  behemoth_biter_player = "behemoth-biter-player",
 }
 
 return data

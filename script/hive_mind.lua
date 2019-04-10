@@ -27,7 +27,6 @@ local check_recipes = function(force)
   end
 end
 
-
 local get_hivemind_force = function()
   if game.forces["hivemind"] then return game.forces["hivemind"] end
   local force = game.create_force("hivemind")
@@ -75,6 +74,43 @@ local quickbar =
   "big-worm-turret",
   "behemoth-worm-turret"
 }
+
+local characters = 
+{
+  [names.players.behemoth_biter_player] = 0.75,
+  [names.players.big_biter_player] = 0.5,
+  [names.players.medium_biter_player] = 0.25,
+  [names.players.small_biter_player] = 0
+}
+
+local create_character = function(player)
+
+  local force = player.force
+  local factor = force.evolution_factor
+  local name
+  for character, minimum_factor in pairs (characters) do
+    if factor > minimum_factor then 
+      name = character
+      break
+    end
+  end
+  local surface = player.surface
+  player.character = surface.create_entity
+  {
+    name = name,
+    position = surface.find_non_colliding_position(name, force.get_spawn_position(surface), 0, 1),
+    force = force
+  }
+  player.character.get_inventory(defines.inventory.player_guns).insert(player.character.name.."-gun")
+  player.character.get_inventory(defines.inventory.player_ammo).insert(player.character.name.."-ammo")
+  add_biter_light(player)
+
+  player.set_active_quick_bar_page(1, 1)
+  for k, filter in pairs (quickbar) do
+    player.set_quick_bar_slot(k, filter)
+  end
+
+end
 
 local area = function(position, radius)
   return {{position.x - radius, position.y - radius},{position.x + radius, position.y + radius}}
@@ -139,21 +175,7 @@ local join_hive = function(player)
 
   player.character = nil
   player.force = force
-  player.character = surface.create_entity
-  {
-    name = names.players.biter_player,
-    position = surface.find_non_colliding_position(names.players.biter_player, position, 0, 1),
-    force = force
-  }
-  player.character.get_inventory(defines.inventory.player_guns).insert(player.character.name.."-gun")
-  player.character.get_inventory(defines.inventory.player_ammo).insert(player.character.name.."-ammo")
-  add_biter_light(player)
-
-  player.set_active_quick_bar_page(1, 1)
-  for k, filter in pairs (quickbar) do
-    player.set_quick_bar_slot(k, filter)
-  end
-
+  create_character(player)
 
 end
 
@@ -162,16 +184,7 @@ local on_player_respawned = function(event)
   if player.force ~= get_hivemind_force() then return end
 
   player.character.destroy()
-  player.character = player.surface.create_entity
-  {
-    name = names.players.biter_player,
-    position = player.surface.find_non_colliding_position(names.players.biter_player, player.position, 0, 1),
-    force = player.force
-  }
-  player.character.get_inventory(defines.inventory.player_guns).insert(player.character.name.."-gun")
-  player.character.get_inventory(defines.inventory.player_ammo).insert(player.character.name.."-ammo")
-  add_biter_light(player)
-
+  create_character(player)
 
 end
 
@@ -193,11 +206,9 @@ local pollution_values =
 local on_player_mined_entity = function(event)
   local player = game.get_player(event.player_index)
   if not (player and player.valid) then return end
-  local character = player.character
+  local force = player.force
 
-  if not (character and character.valid and character.name == names.players.biter_player) then
-    return
-  end
+  if not (force and force.valid and force == get_hivemind_force()) then return end
 
   local entity = event.entity
   if not (entity and entity.valid) then return end
@@ -206,7 +217,6 @@ local on_player_mined_entity = function(event)
   if not (buffer and buffer.valid) then return end
   local surface = entity.surface
   local position = entity.position
-  local pollute = surface.pollute
   local remove = buffer.remove
   local total_pollution = 0
   for name, count in pairs (buffer.get_contents()) do
@@ -219,7 +229,7 @@ local on_player_mined_entity = function(event)
   if total_pollution == 0 then return end
 
   surface.create_entity{name = "flying-text", position = position, text = "Pollution +"..total_pollution, color = {r = 1, g = 0.2, b = 0.2}}
-  pollute(position, total_pollution)
+  surface.pollute(position, total_pollution)
 
 end
 
