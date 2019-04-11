@@ -239,21 +239,27 @@ local check_ghost = function(ghost_data)
   local r = 16
   local area = {{x = origin.x - r, y = origin.y - r}, {x = origin.x + r, y = origin.y + r}}
   local command =
-  {
+    {
+      type = defines.command.go_to_location,
+      destination_entity = entity,
+      distraction = defines.distraction.none,
+      radius = 1
+    }
+  local old = {
     type = defines.command.compound,
-    structure_type = defines.compound_command.logical_and,
+    structure_type = defines.compound_command.return_last,
     commands =
     {
       {
         type = defines.command.go_to_location,
         destination_entity = entity,
-        distraction = defines.distraction.by_damage,
-        radius = 0.5
+        distraction = defines.distraction.none,
+        radius = 1
       },
       {
         type = defines.command.stop,
-        distraction = defines.distraction.by_damage,
-        ticks_to_wait = 60
+        distraction = defines.distraction.none,
+        ticks_to_wait = 300
       }
     }
   }
@@ -265,7 +271,7 @@ local check_ghost = function(ghost_data)
       --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "IDLE"}
       unit.set_command(command)
       needed_pollution = needed_pollution - unit.prototype.pollution_to_join_attack
-      data.not_idle_units[unit_number] = game.tick
+      data.not_idle_units[unit_number] = {tick = game.tick, ghost_data = ghost_data}
     else
       --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "NOT IDLE"}
     end
@@ -398,8 +404,8 @@ local check_not_idle_units = function(tick)
   if tick % expiry_time ~= 0 then return end
   local expiry_tick = tick - expiry_time
   local max = sanity_max
-  for unit_number, tick in pairs (data.not_idle_units) do
-    if tick <= expiry_tick then
+  for unit_number, unit_data in pairs (data.not_idle_units) do
+    if unit_data.tick <= expiry_tick then
       data.not_idle_units[unit_number] = nil
     end
     max = max - 1
@@ -431,6 +437,14 @@ local on_entity_died = function(event)
   spawner.die()
 end
 
+local on_ai_command_completed = function(event)
+  local command_data = data.not_idle_units[event.unit_number]
+  if command_data then
+    game.print("GOT YA!")
+    check_ghost(command_data.ghost_data)
+  end
+end
+
 local events =
 {
   [defines.events.on_built_entity] = on_built_entity,
@@ -439,6 +453,7 @@ local events =
   [defines.events.script_raised_built] = on_built_entity,
   [defines.events.on_tick] = on_tick,
   [defines.events.on_entity_died] = on_entity_died,
+  [defines.events.on_ai_command_completed] = on_ai_command_completed,
 }
 
 local unit_deployment = {}

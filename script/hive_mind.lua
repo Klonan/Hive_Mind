@@ -35,7 +35,7 @@ local can_create_hivemind_force = function()
   return table_size(script_data.hive_mind_forces) < max_hivemind_forces
 end
 
-local convert_nest 
+local convert_nest
 
 local create_hivemind_force = function(player)
   local current_count = table_size(script_data.hive_mind_forces)
@@ -48,7 +48,7 @@ local create_hivemind_force = function(player)
   enemy_force.share_chart = true
   force.set_cease_fire(enemy_force, true)
   force.set_friend(enemy_force, true)
-  
+
   for index, other_force in pairs (script_data.hive_mind_forces) do
     other_force.set_cease_fire(force, true)
     other_force.set_friend(force, true)
@@ -118,7 +118,7 @@ local quickbar =
   "behemoth-worm-turret"
 }
 
-local characters = 
+local characters =
 {
   [names.players.behemoth_biter_player] = 0.75,
   [names.players.big_biter_player] = 0.5,
@@ -132,7 +132,7 @@ local create_character = function(player)
   local factor = force.evolution_factor
   local name = names.players.small_biter_player
   for character, minimum_factor in pairs (characters) do
-    if factor >= minimum_factor then 
+    if factor >= minimum_factor then
       name = character
       break
     end
@@ -167,7 +167,8 @@ local get_hive_entities = function(entity)
   local radius = 8
   --local count = 1
   local function recursive_find_neighbors(entity)
-    if map[entity.unit_number] then return end
+    local unit_number = entity.unit_number
+    if (not unit_number) or map[unit_number] then return end
     map[entity.unit_number] = entity
     params.area = area(entity.position, radius)
     for k, nearby in pairs (find(params)) do
@@ -213,7 +214,7 @@ convert_nest = function(player, force)
     elseif nearby.type == "unit" or nearby.type == "turret" then
       nearby.force = force
     end
-  end  
+  end
 end
 
 
@@ -258,7 +259,7 @@ end
 
 join_hive = function(player)
   local force = choose_hivemind_force(player)
-  local previous_life_data = 
+  local previous_life_data =
   {
     force = player.force,
     character = player.character,
@@ -269,12 +270,49 @@ join_hive = function(player)
   script_data.previous_life_data[player.index] = previous_life_data
   player.character = nil
   player.force = force
+  --player.game_view_settings.show_controller_gui = false
   create_character(player)
   gui_init(player)
 end
 
 local check_hivemind_disband = function(force)
   game.print("checking disband of force "..force.name)
+
+  if #force.players > 0 then
+    --still players on this force, so its alright.
+    return
+  end
+
+  --We just need to turn the crafting machines back into spawners.
+
+  local map = {}
+  for k, v in pairs (deploy_map) do
+    map[v] = k
+  end
+
+  local destroy_map_type =
+  {
+    radar = true
+  }
+
+  local params = {force = force}
+  for surface_index, surface in pairs(game.surfaces) do
+    for k, entity in pairs (surface.find_entities_filtered(params)) do
+      if map[entity.name] then
+        surface.create_entity{name = map[entity.name], position = entity.position, force = entity.force}
+        entity.destroy()
+      elseif destroy_map_type[entity.type] then
+        entity.destroy()
+      end
+    end
+  end
+
+  script_data.hive_mind_forces[force.index] = nil
+
+  game.print("Disbanding "..force.name)
+  game.merge_forces(force, game.forces.enemy)
+
+
 end
 
 leave_hive = function(player)
@@ -308,6 +346,7 @@ leave_hive = function(player)
     player.teleport(previous_life_data.position)
   end
   gui_init(player)
+  --player.game_view_settings.show_controller_gui = true
   check_hivemind_disband(current_hivemind_force)
 
 end
@@ -323,7 +362,11 @@ end
 local on_tick = function(event)
   if event.tick % 297 ~= 0 then return end
   for index, force in pairs (script_data.hive_mind_forces) do
-    check_recipes(force)
+    if force.valid then
+      check_recipes(force)
+    else
+      script_data.hive_mind_forces[index] = nil
+    end
   end
 end
 
@@ -383,7 +426,6 @@ local on_player_created = function(event)
   local player = game.get_player(event.player_index)
   gui_init(player)
 end
-
 
 remote.add_interface("hive_mind",
 {
