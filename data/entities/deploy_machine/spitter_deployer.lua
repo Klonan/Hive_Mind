@@ -55,7 +55,8 @@ machine.energy_source = {type = "void"}
 machine.create_ghost_on_death = false
 machine.friendly_map_color = {g = 1}
 
-local item = {
+local item =
+{
   type = "item",
   name = name,
   icon = machine.icon,
@@ -67,7 +68,8 @@ local item = {
   stack_size = 50
 }
 
-local category = {
+local category =
+{
   type = "recipe-category",
   name = name
 }
