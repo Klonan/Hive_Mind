@@ -1,30 +1,7 @@
 
-names = require("shared")
+shared = require("shared")
 
 local util = require("data/tf_util/tf_util")
-
-local biter_names ={
-  "small-biter",
-  "medium-biter",
-  "big-biter",
-  "behemoth-biter",
-}
-
-local spitter_names =
-{
-  "small-spitter",
-  "medium-spitter",
-  "big-spitter",
-  "behemoth-spitter"
-}
-
-local worm_names =
-{
-  "small-worm-turret",
-  "medium-worm-turret",
-  "big-worm-turret",
-  "behemoth-worm-turret"
-}
 
 local make_biter_item = function(prototype, subgroup)
   local item =
@@ -32,7 +9,7 @@ local make_biter_item = function(prototype, subgroup)
     type = "item",
     name = prototype.name,
     localised_name = prototype.localised_name,
-    --localised_description = prototype.pollution_to_join_attack,
+    localised_description = {"requires-pollution", prototype.pollution_to_join_attack},
     icon = prototype.icon,
     icon_size = prototype.icon_size,
     stack_size = 1,
@@ -74,6 +51,7 @@ local make_worm_item = function(prototype)
     type = "item",
     name = prototype.name,
     localised_name = prototype.localised_name,
+    localised_description = {"requires-pollution", shared.required_pollution[prototype.name]},
     icon = prototype.icon,
     icon_size = prototype.icon_size,
     stack_size = 1,
@@ -84,36 +62,53 @@ local make_worm_item = function(prototype)
   data:extend{item}
 end
 
-
-local units = data.raw.unit
-
-
-for k, name in pairs (biter_names) do
-  local biter = units[name] or error("No Biter with name "..name)
+local make_biter = function(biter)
   biter.collision_mask = util.ground_unit_collision_mask()
   biter.radar_range = biter.radar_range or 2
   make_biter_item(biter, names.deployers.biter_deployer)
   make_biter_recipe(biter, names.deployers.biter_deployer)
+  biter.ai_settings = biter.ai_settings or {}
   biter.ai_settings.destroy_when_commands_fail = false
   biter.friendly_map_color = {b = 1, g = 1}
   biter.affected_by_tiles = biter.affected_by_tiles or true
+  biter.localised_description = {"requires-pollution", biter.pollution_to_join_attack}
 end
 
-for k, name in pairs (spitter_names) do
-  local biter = units[name] or error("No Spitter with name "..name)
+local make_spitter = function(biter)
   biter.collision_mask = util.ground_unit_collision_mask()
   biter.radar_range = biter.radar_range or 2
   make_biter_item(biter, names.deployers.spitter_deployer)
   make_biter_recipe(biter, names.deployers.spitter_deployer)
+  biter.ai_settings = biter.ai_settings or {}
   biter.ai_settings.destroy_when_commands_fail = false
   biter.friendly_map_color = {b = 1, g = 1}
   biter.affected_by_tiles = biter.affected_by_tiles or true
+  biter.localised_description = {"requires-pollution", biter.pollution_to_join_attack}
 end
 
-for k, name in pairs (worm_names) do
-  local turret = data.raw.turret[name] or error("No worm with name "..name)
+local make_worm = function(turret)
   make_worm_item(turret)
   table.insert(turret.flags, "player-creation")
   turret.create_ghost_on_death = false
   turret.friendly_map_color = {b = 1, g = 0.5}
+  turret.localised_description = {"requires-pollution", shared.required_pollution[name]}
+end
+
+
+local units = data.raw.unit
+
+for name, unit in pairs (units) do
+  if unit.name:find("biter") then
+    make_biter(unit)
+  elseif unit.name:find("spitter") then
+    make_spitter(unit)
+  end
+end
+
+local turrets = data.raw.turret
+
+for name, turret in pairs (turrets) do
+  if turret.name:find("worm%-turret") then
+    make_worm(turret)
+  end
 end

@@ -1,6 +1,7 @@
 local util = require("data/tf_util/tf_util")
 local machine = util.copy(data.raw["assembling-machine"]["assembling-machine-2"])
 local graphics = util.copy(data.raw["unit-spawner"]["biter-spawner"])
+local shared = require("shared")
 
 for k, animation in pairs (graphics.animations) do
   for k, layer in pairs (animation.layers) do
@@ -12,6 +13,7 @@ end
 local name = names.deployers.biter_deployer
 machine.name = name
 machine.localised_name = {name}
+machine.localised_description = {"requires-pollution", shared.required_pollution[name]}
 machine.icon = graphics.icon
 machine.icon_size = graphics.icon_size
 machine.collision_box = {{-2.1, -2.1},{2.1, 2.1}}
@@ -58,6 +60,8 @@ machine.friendly_map_color = {g = 1}
 local item = {
   type = "item",
   name = name,
+  localised_name = {name},
+  localised_description = {"requires-pollution", shared.required_pollution[name]},
   icon = machine.icon,
   icon_size = machine.icon_size,
   flags = {},

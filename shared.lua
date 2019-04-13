@@ -16,4 +16,14 @@ data.players =
   behemoth_biter_player = "behemoth-biter-player",
 }
 
+data.required_pollution =
+{
+  [data.deployers.biter_deployer] = 100,
+  [data.deployers.spitter_deployer] = 200,
+  ["small-worm-turret"] = 50,
+  ["medium-worm-turret"] = 150,
+  ["big-worm-turret"] = 400,
+  ["behemoth-worm-turret"] = 1000
+}
+
 return data

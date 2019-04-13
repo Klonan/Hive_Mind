@@ -1,3 +1,4 @@
+local shared = require("shared")
 local data =
 {
   spawner_tick_check = {},
@@ -56,7 +57,7 @@ local pollution_scale = 5
 --Max pollution each spawner can absorb is 10% of whatever the chunk has.
 local pollution_max_percent = 0.1
 local min_to_take = 1
-local pollution_max_percent_as_progress = 0.5
+local pollution_max_percent_as_progress = 1
 
 local prototype_cache = {}
 
@@ -205,15 +206,7 @@ local is_idle = function(unit_number)
   return not (data.not_idle_units[unit_number]) --and remote.call("unit_control", "is_unit_idle", unit.unit_number)
 end
 
-local required_pollution =
-{
-  [names.biter_deployer] = 100,
-  [names.spitter_deployer] = 200,
-  ["small-worm-turret"] = 50,
-  ["medium-worm-turret"] = 150,
-  ["big-worm-turret"] = 400,
-  ["behemoth-worm-turret"] = 1000
-}
+local required_pollution = shared.required_pollution
 
 local check_ghost = function(ghost_data)
   local entity = ghost_data.entity
@@ -241,32 +234,13 @@ local check_ghost = function(ghost_data)
   local r = 16
   local area = {{x = origin.x - r, y = origin.y - r}, {x = origin.x + r, y = origin.y + r}}
   local command =
-    {
-      type = defines.command.go_to_location,
-      destination_entity = entity,
-      distraction = defines.distraction.none,
-      radius = 1
-    }
-  local old = {
-    type = defines.command.compound,
-    structure_type = defines.compound_command.return_last,
-    commands =
-    {
-      {
-        type = defines.command.go_to_location,
-        destination_entity = entity,
-        distraction = defines.distraction.none,
-        radius = 1
-      },
-      {
-        type = defines.command.stop,
-        distraction = defines.distraction.none,
-        ticks_to_wait = 300
-      }
-    }
+  {
+    type = defines.command.go_to_location,
+    destination_entity = entity,
+    distraction = defines.distraction.none,
+    radius = 1
   }
   local needed_pollution = ghost_data.required_pollution
-  local check_control = false --  remote.interfaces["unit_control"]
   for k, unit in pairs (surface.find_entities_filtered{area = area, force = entity.force, type = "unit"}) do
     local unit_number = unit.unit_number
     if is_idle(unit_number) then
@@ -274,10 +248,10 @@ local check_ghost = function(ghost_data)
       unit.set_command(command)
       needed_pollution = needed_pollution - unit.prototype.pollution_to_join_attack
       data.not_idle_units[unit_number] = {tick = game.tick, ghost_data = ghost_data}
+      if needed_pollution <= 0 then break end
     else
       --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "NOT IDLE"}
     end
-    --if needed_pollution <= 0 then break end
   end
 
   local background = ghost_data.background
