@@ -344,6 +344,7 @@ leave_hive = function(player)
   if biter and biter.valid then biter.die() end
 
   player.force = force
+  local surface = player.surface
   if character then
     --he used to have a character
     if character.valid then
@@ -353,7 +354,7 @@ leave_hive = function(player)
       player.character = surface.create_entity
       {
         name = character_name,
-        position = player.surface.find_non_colliding_position(character_name, force.get_spawn_position(player.surface), 0, 1),
+        position = surface.find_non_colliding_position(character_name, force.get_spawn_position(surface), 0, 1),
         force = force
       }
     end
