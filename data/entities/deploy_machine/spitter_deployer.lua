@@ -10,7 +10,7 @@ end
 
 local name = names.deployers.spitter_deployer
 machine.name = name
-machine.localised_name = name
+machine.localised_name = {name}
 machine.icon = graphics.icon
 machine.icon_size = graphics.icon_size
 machine.collision_box = {{-2.1, -2.1},{2.1, 2.1}}

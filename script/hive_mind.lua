@@ -30,9 +30,10 @@ local check_recipes = function(force)
   end
 end
 
-local max_hivemind_forces = 10
+--local max_hivemind_forces = 10
 local can_create_hivemind_force = function()
-  return table_size(script_data.hive_mind_forces) < max_hivemind_forces
+  return #game.forces < 64
+  --return table_size(script_data.hive_mind_forces) < max_hivemind_forces
 end
 
 local convert_nest
@@ -70,16 +71,17 @@ local create_hivemind_force = function(player)
 end
 
 choose_hivemind_force = function(player)
-  if can_create_hivemind_force() then
-    return create_hivemind_force(player)
-  end
-  local array = {}
-  local count = 1
-  for index, force in pairs (script_data.hive_mind_forces) do
-    array[count] = force
-    count = count + 1
-  end
-  return array[1 + (player.index % count)]
+  return can_create_hivemind_force() and create_hivemind_force(player)
+  --if can_create_hivemind_force() then
+  --  return create_hivemind_force(player)
+  --end
+  --local array = {}
+  --local count = 1
+  --for index, force in pairs (script_data.hive_mind_forces) do
+  --  array[count] = force
+  --  count = count + 1
+  --end
+  --return array[1 + (player.index % count)]
 end
 
 local is_hivemind_force = function(force)
@@ -107,16 +109,6 @@ local add_biter_light = function(player)
     minimum_darkness = 0
   }
 end
-
-local quickbar =
-{
-  names.deployers.biter_deployer,
-  names.deployers.spitter_deployer,
-  "small-worm-turret",
-  "medium-worm-turret",
-  "big-worm-turret",
-  "behemoth-worm-turret"
-}
 
 local characters =
 {
@@ -147,11 +139,6 @@ local create_character = function(player)
   player.character.get_inventory(defines.inventory.player_guns).insert(player.character.name.."-gun")
   player.character.get_inventory(defines.inventory.player_ammo).insert(player.character.name.."-ammo")
   add_biter_light(player)
-
-  player.set_active_quick_bar_page(1, 1)
-  for k, filter in pairs (quickbar) do
-    player.set_quick_bar_slot(k, filter)
-  end
 
 end
 
@@ -222,14 +209,16 @@ local join_hive_button =
 {
   type = "button",
   name = "join-hive-button",
-  caption = "JOIN THE HIVE"
+  caption = {"join-hive"},
+  style = mod_gui.button_style
 }
 
 local leave_hive_button =
 {
   type = "button",
   name = "leave-hive-button",
-  caption = "LEAVE THE HIVE :("
+  caption = {"leave-hive"},
+  style = mod_gui.button_style
 }
 
 local join_hive
@@ -257,15 +246,40 @@ local gui_init = function(player)
   gui.add(element)
 end
 
+
+local biter_quickbar =
+{
+  names.deployers.biter_deployer,
+  names.deployers.spitter_deployer,
+  "small-worm-turret",
+  "medium-worm-turret",
+  "big-worm-turret",
+  "behemoth-worm-turret"
+}
+
 join_hive = function(player)
   local force = choose_hivemind_force(player)
+  if not force then
+    player.print{"hive-is-full"}
+    return
+  end
+  local get_quick_bar_slot = player.get_quick_bar_slot
+  local set_quick_bar_slot = player.set_quick_bar_slot
+  local quickbar = {}
+  for k = 1, 100 do
+    local item = get_quick_bar_slot(k)
+    if item then quickbar[k] = item.name end
+    set_quick_bar_slot(k, biter_quickbar[k])
+  end
+  player.set_active_quick_bar_page(1, 1)
   local previous_life_data =
   {
     force = player.force,
     character = player.character,
     character_name = player.character and player.character.name,
     controller = player.controller_type,
-    position = player.position
+    position = player.position,
+    quickbar = quickbar
   }
   script_data.previous_life_data[player.index] = previous_life_data
   player.character = nil
@@ -273,13 +287,15 @@ join_hive = function(player)
   --player.game_view_settings.show_controller_gui = false
   create_character(player)
   gui_init(player)
+  game.print{"joined-hive", player.name}
 end
 
 local check_hivemind_disband = function(force)
-  game.print("checking disband of force "..force.name)
 
   if #force.players > 0 then
     --still players on this force, so its alright.
+    --Actually, I decided that only 1 player per force, so this should never happen
+    game.print("OOF, this should never happen! Are you cheesing with console commands??")
     return
   end
 
@@ -292,7 +308,8 @@ local check_hivemind_disband = function(force)
 
   local destroy_map_type =
   {
-    radar = true
+    radar = true,
+    ["entity-ghost"] = true
   }
 
   local params = {force = force}
@@ -309,9 +326,7 @@ local check_hivemind_disband = function(force)
 
   script_data.hive_mind_forces[force.index] = nil
 
-  game.print("Disbanding "..force.name)
   game.merge_forces(force, game.forces.enemy)
-
 
 end
 
@@ -346,6 +361,14 @@ leave_hive = function(player)
     player.teleport(previous_life_data.position)
   end
   gui_init(player)
+
+  local set_quick_bar_slot = player.set_quick_bar_slot
+  local old_quickbar = previous_life_data.quickbar
+  for k = 1, 100 do
+    set_quick_bar_slot(k, old_quickbar[k])
+  end
+
+  game.print{"left-hive", player.name}
   --player.game_view_settings.show_controller_gui = true
   check_hivemind_disband(current_hivemind_force)
 

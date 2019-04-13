@@ -35,6 +35,7 @@ local make_biter_player = function(name, graphics)
   end
 
   player.name = name
+  player.localised_name = {name}
   player.animations =
   {
     {

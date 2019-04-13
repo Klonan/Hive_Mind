@@ -1,4 +1,4 @@
---Basically, make them not collide with each other, and make them chart chunks.
+
 names = require("shared")
 
 local util = require("data/tf_util/tf_util")
@@ -32,7 +32,7 @@ local make_biter_item = function(prototype, subgroup)
     type = "item",
     name = prototype.name,
     localised_name = prototype.localised_name,
-    localised_description = prototype.pollution_to_join_attack,
+    --localised_description = prototype.pollution_to_join_attack,
     icon = prototype.icon,
     icon_size = prototype.icon_size,
     stack_size = 1,
@@ -48,7 +48,7 @@ local make_biter_recipe = function(prototype, category)
   {
     type = "recipe",
     name = prototype.name,
-    localised_name = prototype.name,
+    localised_name = prototype.localised_name,
     enabled = true,
     ingredients = {},
     energy_required = prototype.pollution_to_join_attack * 5,

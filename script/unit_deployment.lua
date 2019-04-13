@@ -39,7 +39,9 @@ local deploy_unit = function(source, prototype, count)
   local create_entity = surface.create_entity
   for k = 1, count do
     if not surface.valid then break end
-    local deploy_position = can_place_entity{name = name, position = position, direction = direction, force = force, build_check_type = defines.build_check_type.manual} and position or find_non_colliding_position(name, position, 0, 1)
+    local deploy_position = find_non_colliding_position(name, position, 0, 0.2)
+    create_entity{name = "blood-explosion-big", position = deploy_position}
+    create_entity{name = "blood-fountain", position = deploy_position}
     local unit = create_entity{name = name, position = deploy_position, force = force, direction = direction}
     script.raise_event(defines.events.on_entity_spawned, {entity = unit, spawner = source})
     deployed = deployed + 1
@@ -440,8 +442,7 @@ end
 local on_ai_command_completed = function(event)
   local command_data = data.not_idle_units[event.unit_number]
   if command_data then
-    game.print("GOT YA!")
-    check_ghost(command_data.ghost_data)
+    return check_ghost(command_data.ghost_data)
   end
 end
 
