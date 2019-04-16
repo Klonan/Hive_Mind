@@ -44,6 +44,7 @@ local deploy_unit = function(source, prototype, count)
     create_entity{name = "blood-explosion-big", position = deploy_position}
     create_entity{name = "blood-fountain", position = deploy_position}
     local unit = create_entity{name = name, position = deploy_position, force = force, direction = direction}
+    unit.force.item_production_statistics.on_flow(name, 1)
     script.raise_event(defines.events.on_entity_spawned, {entity = unit, spawner = source})
     deployed = deployed + 1
   end
@@ -116,6 +117,8 @@ local check_spawner = function(spawner_data)
 
   entity.crafting_progress = new_progress / max_progress
   entity.surface.pollute(entity.position, -pollution_to_take)
+  game.pollution_statistics.on_flow(prototype.name, -pollution_to_take)
+  entity.force.item_production_statistics.on_flow(shared.pollution_proxy, -pollution_to_take)
 
   local background = spawner_data.background
   if not background then
@@ -186,18 +189,24 @@ local teleport_unit_away = function(unit, area)
 end
 
 local try_to_revive_entity = function(entity)
+  local force = entity.force
+  local name = entity.ghost_name
   local revived = entity.revive({raise_revive = true})
-  if revived then return true end
+  if revived then
+    force.entity_build_count_statistics.on_flow(name, 1)
+    return true
+  end
   local prototype = get_prototype(entity.ghost_name)
   local box = prototype.collision_box
   local origin = entity.position
   local area = {{box.left_top.x + origin.x, box.left_top.y + origin.y},{box.right_bottom.x + origin.x, box.right_bottom.y + origin.y}}
   local units = {}
-  for k, unit in pairs (entity.surface.find_entities_filtered{area = area, force = entity.force, type = "unit"}) do
+  for k, unit in pairs (entity.surface.find_entities_filtered{area = area, force = force, type = "unit"}) do
     teleport_unit_away(unit, area)
   end
   local revived = entity.revive({raise_revive = true})
   if revived then
+    force.entity_build_count_statistics.on_flow(name, 1)
     return true
   end
 end
@@ -315,7 +324,7 @@ local spawner_built = function(entity, tick)
 
   local spawner_data = {entity = entity, proxy = radar_proxy}
   data.proxies[radar_proxy.unit_number] = spawner_data
-  local update_tick = 1 + tick + (entity.unit_number % spawners_update_interval)
+  local update_tick = tick + (entity.unit_number % spawners_update_interval)
   data.spawner_tick_check[update_tick] = data.spawner_tick_check[update_tick] or {}
   data.spawner_tick_check[update_tick][entity.unit_number] = spawner_data
 end
@@ -325,7 +334,7 @@ local ghost_update_interval = 60
 local spawner_ghost_built = function(entity, tick)
   local pollution = required_pollution[entity.ghost_name]
   local ghost_data = {entity = entity, required_pollution = pollution}
-  local update_tick = 1 + tick + (entity.unit_number % ghost_update_interval)
+  local update_tick = tick + (entity.unit_number % ghost_update_interval)
   data.ghost_tick_check[update_tick] = data.ghost_tick_check[update_tick] or {}
   data.ghost_tick_check[update_tick][entity.unit_number] = ghost_data
   check_ghost(ghost_data)
@@ -428,7 +437,7 @@ local events =
   [defines.events.script_raised_built] = on_built_entity,
   [defines.events.on_tick] = on_tick,
   [defines.events.on_entity_died] = on_entity_died,
-  [defines.events.on_ai_command_completed] = on_ai_command_completed,
+  [defines.events.on_ai_command_completed] = on_ai_command_completed
 }
 
 local unit_deployment = {}

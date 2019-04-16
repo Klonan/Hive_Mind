@@ -94,6 +94,8 @@ local deploy_map =
   ["spitter-spawner"] = names.deployers.spitter_deployer,
 }
 
+local light_color = {r = 1, b = 0, g = 0.6}
+
 local add_biter_light = function(player)
   local index = script_data.player_lights[player.index]
   if index and rendering.is_valid(index) then return end
@@ -101,8 +103,8 @@ local add_biter_light = function(player)
   {
     sprite = "utility/light_medium",
     scale = 50,
-    intensity = 0.8,
-    color = {r = 0.8, b = 0.2, g = 0.2},
+    intensity = 0.5,
+    color = light_color,
     target = player.character,
     surface = player.surface,
     forces = {player.force},
@@ -456,6 +458,19 @@ remote.add_interface("hive_mind",
   --test = function(player) return join_hive(player) end
 })
 
+local on_marked_for_deconstruction = function(event)
+  if not event.player_index then return end
+  local player = game.get_player(event.player_index)
+  if not player then return end
+  local force = player.force
+  if not is_hivemind_force(force) then return end
+  local entity = event.entity
+  if not (entity and entity.valid) then return end
+  if entity.force == force then
+    entity.die()
+  end
+end
+
 local events =
 {
   [defines.events.on_player_respawned] = on_player_respawned,
@@ -464,6 +479,7 @@ local events =
   [defines.events.on_player_joined_game] = on_player_joined_game,
   [defines.events.on_player_created] = on_player_created,
   [defines.events.on_gui_click] = on_gui_click,
+  [defines.events.on_marked_for_deconstruction] = on_marked_for_deconstruction
 }
 
 local lib = {}

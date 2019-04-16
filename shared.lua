@@ -16,6 +16,8 @@ data.players =
   behemoth_biter_player = "behemoth-biter-player",
 }
 
+data.pollution_proxy = "pollution-proxy"
+
 data.required_pollution =
 {
   [data.deployers.biter_deployer] = 100,
