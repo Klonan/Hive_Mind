@@ -117,7 +117,7 @@ local check_spawner = function(spawner_data)
 
   entity.crafting_progress = new_progress / max_progress
   entity.surface.pollute(entity.position, -pollution_to_take)
-  game.pollution_statistics.on_flow(prototype.name, -pollution_to_take)
+  game.pollution_statistics.on_flow(entity.name, -pollution_to_take)
   entity.force.item_production_statistics.on_flow(shared.pollution_proxy, -pollution_to_take)
 
   local background = spawner_data.background
