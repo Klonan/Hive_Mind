@@ -36,6 +36,8 @@ local make_biter_player = function(name, graphics)
 
   player.name = name
   player.localised_name = {name}
+  player.icon = graphics.icon
+  player.icon_size = graphics.icon_size
   player.animations =
   {
     {

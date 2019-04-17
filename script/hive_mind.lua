@@ -281,19 +281,21 @@ join_hive = function(player)
     character_name = player.character and player.character.name,
     controller = player.controller_type,
     position = player.position,
-    quickbar = quickbar
+    quickbar = quickbar,
+    tag = player.tag
   }
   script_data.previous_life_data[player.index] = previous_life_data
   player.character = nil
   player.force = force
   --player.game_view_settings.show_controller_gui = false
   create_character(player)
+  player.tag = "[color=255,100,100]HIVE[/color]"
   gui_init(player)
   game.print{"joined-hive", player.name}
 end
 
 local check_hivemind_disband = function(force)
-
+  if not is_hivemind_force(force) then return end
   if #force.players > 0 then
     --still players on this force, so its alright.
     --Actually, I decided that only 1 player per force, so this should never happen
@@ -370,6 +372,8 @@ leave_hive = function(player)
   for k = 1, 100 do
     set_quick_bar_slot(k, old_quickbar[k])
   end
+
+  player.tag = previous_life_data.tag or ""
 
   game.print{"left-hive", player.name}
   --player.game_view_settings.show_controller_gui = true
