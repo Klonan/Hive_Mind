@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.2
+Date: 2019-04-??
+  Changes:
+    - Added ability of biter players to start fires, and balanced the pollution that forest fires will create.
+    - Due to above, I disabled the 'mining to create pollution' mechanic.
+    - Tweaked the 'biter night vision' to be less red.
+    - Added ability to select worms/spawners with the deconstruction planner to kill them.
+    - Added biter/spitter production to production statistics.
+    - Added spawner pollution absorption to the pollution statistics.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.1
 Date: 2019-04-13
   Changes:

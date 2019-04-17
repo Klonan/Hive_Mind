@@ -1,3 +1,4 @@
+local util = require("script/script_util")
 local shared = require("shared")
 local data =
 {
@@ -217,6 +218,12 @@ end
 
 local required_pollution = shared.required_pollution
 
+local distance = util.distance
+
+local get_sacrifice_radius = function()
+  return 16
+end
+
 local check_ghost = function(ghost_data)
   local entity = ghost_data.entity
   if not (entity and entity.valid) then return true end
@@ -224,7 +231,7 @@ local check_ghost = function(ghost_data)
   --entity.surface.create_entity{name = "flying-text", position = entity.position, text = ghost_data.required_pollution}
 
   if ghost_data.required_pollution > 0 then
-    for k, unit in pairs (surface.find_entities_filtered{area = entity.bounding_box, force = entity.force, type = "unit"}) do
+    for k, unit in pairs (surface.find_units{area = entity.bounding_box, force = entity.force, condition = "same"}) do
       local prototype = get_prototype(unit.name)
       local pollution = prototype.pollution_to_join_attack
       if unit.destroy({raise_destroy = true}) then
@@ -238,9 +245,8 @@ local check_ghost = function(ghost_data)
     return try_to_revive_entity(entity)
   end
 
-
   local origin = entity.position
-  local r = 16
+  local r = get_sacrifice_radius()
   local area = {{x = origin.x - r, y = origin.y - r}, {x = origin.x + r, y = origin.y + r}}
   local command =
   {
@@ -249,17 +255,21 @@ local check_ghost = function(ghost_data)
     distraction = defines.distraction.none,
     radius = 1
   }
+
   local needed_pollution = ghost_data.required_pollution
-  for k, unit in pairs (surface.find_entities_filtered{area = area, force = entity.force, type = "unit"}) do
-    local unit_number = unit.unit_number
-    if is_idle(unit_number) then
-      --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "IDLE"}
-      unit.set_command(command)
-      needed_pollution = needed_pollution - unit.prototype.pollution_to_join_attack
-      data.not_idle_units[unit_number] = {tick = game.tick, ghost_data = ghost_data}
-      if needed_pollution <= 0 then break end
-    else
-      --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "NOT IDLE"}
+  if needed_pollution > 0 then
+    for k, unit in pairs (surface.find_units{area = area, force = entity.force, condition = "same"}) do
+      local unit_number = unit.unit_number
+      if is_idle(unit_number) and distance(origin, unit.position) <= r then
+        --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "IDLE"}
+        unit.set_command(command)
+        local pollution = unit.prototype.pollution_to_join_attack
+        needed_pollution = needed_pollution - pollution
+        data.not_idle_units[unit_number] = {tick = game.tick, ghost_data = ghost_data}
+        if needed_pollution <= 0 then break end
+      else
+        --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "NOT IDLE"}
+      end
     end
   end
 
@@ -294,7 +304,24 @@ local check_ghost = function(ghost_data)
     }
     ghost_data.progress_bar = progress_bar
   end
+
   rendering.set_to(ghost_data.progress_bar, entity, {(2 * (1 - (ghost_data.required_pollution / required_pollution[entity.ghost_name]))) - 1, 1})
+
+  local radius = ghost_data.radius
+  if not radius then
+    radius = rendering.draw_circle
+    {
+      color = {r = 0.8, g = 0.8},
+      width = 2,
+      target = entity,
+      surface = entity.surface,
+      forces = {entity.force},
+      draw_on_ground = true,
+      filled = false,
+      radius = r
+    }
+    ghost_data.radius = radius
+  end
 
 end
 
@@ -383,7 +410,7 @@ local check_ghosts_on_tick = function(tick)
   data.spawner_tick_check[tick] = nil
 end
 
-local expiry_time = 120
+local expiry_time = 600
 local sanity_max = 100
 local check_not_idle_units = function(tick)
   if tick % expiry_time ~= 0 then return end
