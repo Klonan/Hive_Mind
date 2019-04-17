@@ -1,3 +1,5 @@
+local shared = require("shared")
+
 local ugly_hack = function(layers)
   for k, layer in pairs (layers) do
     layer.direction_count = 18
@@ -105,10 +107,6 @@ local make_biter_player = function(name, graphics)
     stack_size = 1
   }
   ammo.ammo_type.category = util.ammo_category(name)
-
-  --[[error(serpent.block{
-    ammo = ammo, gun = gun
-  })]]
   data:extend
   {
     player,
@@ -122,3 +120,80 @@ make_biter_player(names.players.small_biter_player, util.copy(data.raw.unit["sma
 make_biter_player(names.players.medium_biter_player, util.copy(data.raw.unit["medium-biter"]))
 make_biter_player(names.players.big_biter_player, util.copy(data.raw.unit["big-biter"]))
 make_biter_player(names.players.behemoth_biter_player, util.copy(data.raw.unit["behemoth-biter"]))
+
+--local flame = util.copy(data.raw.fire["fire-flame"])
+--flame.name = "firestarter-flame"
+--flame.initial_lifetime = 600
+--flame.damage_per_tick.amount = 0
+--flame.spawn_entity = flame.name
+
+local fire_on_tree = data.raw.fire["fire-flame-on-tree"]
+fire_on_tree.emissions_per_second = 0.05
+fire_on_tree.damage_per_tick.amount = 3.5 / 60
+fire_on_tree.spread_delay = 300
+fire_on_tree.initial_lifetime = 600
+fire_on_tree.tree_dying_factor = 0.98
+fire_on_tree.maximum_spread_count = (2 ^ 16) - 1
+fire_on_tree.light = {intensity = 0.25, size = 20, color = {r = 1, g = 0.5}}
+
+local icon = "__base__/graphics/technology/refined-flammables.png"
+local icon_size = 128
+
+
+local firestarter_attack_parameters = {
+  cooldown = 350,
+  range = 3,
+  type = "projectile",
+  ammo_category = util.ammo_category("firestarter-gun"),
+  ammo_consumption_modifier = 0,
+  movement_slow_down_cooldown = 30
+}
+
+local firestarter_ammo_type =
+{
+  action = {
+    action_delivery = {
+      target_effects =
+      {
+        type = "create-fire",
+        entity_name = fire_on_tree.name
+      },
+      type = "instant"
+    },
+    type = "direct"
+  },
+  category = util.ammo_category("firestarter-gun"),
+  target_type = "entity",
+}
+
+local firestarter_gun =
+{
+  type = "gun",
+  name = shared.firestarter_gun,
+  icon = icon,
+  icon_size = icon_size,
+  subgroup = "gun",
+  order = shared.firestarter_gun,
+  attack_parameters = firestarter_attack_parameters,
+  stack_size = 1
+}
+
+local firestarter_ammo =
+{
+  type = "ammo",
+  name = shared.firestarter_ammo,
+  icon = icon,
+  icon_size = icon_size,
+  ammo_type = firestarter_ammo_type,
+  magazine_size = 1,
+  subgroup = "ammo",
+  order = shared.firestarter_gun,
+  stack_size = 1
+}
+
+data:extend
+{
+  firestarter_gun,
+  firestarter_ammo,
+  --flame
+}

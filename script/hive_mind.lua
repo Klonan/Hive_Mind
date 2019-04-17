@@ -140,6 +140,8 @@ local create_character = function(player)
   }
   player.character.get_inventory(defines.inventory.player_guns).insert(player.character.name.."-gun")
   player.character.get_inventory(defines.inventory.player_ammo).insert(player.character.name.."-ammo")
+  player.character.get_inventory(defines.inventory.player_guns).insert(names.firestarter_gun)
+  player.character.get_inventory(defines.inventory.player_ammo).insert(names.firestarter_ammo)
   add_biter_light(player)
 
 end
@@ -402,9 +404,9 @@ end
 
 local pollution_values =
 {
-  wood = 1,
-  coal = 1.5,
-  stone = 0.1
+  --wood = 1,
+  --coal = 1.5,
+  --stone = 0.1
 }
 
 local on_player_mined_entity = function(event)
