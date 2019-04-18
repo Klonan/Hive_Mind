@@ -137,10 +137,12 @@ local create_character = function(player)
     end
   end
   local surface = player.surface
+  local position = surface.find_non_colliding_position(name, force.get_spawn_position(surface), 64, 1)
+  if not position then return end
   player.character = surface.create_entity
   {
     name = name,
-    position = surface.find_non_colliding_position(name, force.get_spawn_position(surface), 0, 1),
+    position = position,
     force = force
   }
   player.character.get_inventory(defines.inventory.player_guns).insert(player.character.name.."-gun")
