@@ -102,6 +102,7 @@ local deploy_map =
 local light_color = {r = 1, b = 0, g = 0.6}
 
 local add_biter_light = function(player)
+  if not player.character then return end
   local index = script_data.player_lights[player.index]
   if index and rendering.is_valid(index) then return end
   script_data.player_lights[player.index] = rendering.draw_light
