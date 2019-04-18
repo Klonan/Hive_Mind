@@ -398,15 +398,34 @@ local on_player_respawned = function(event)
 
 end
 
-local on_tick = function(event)
+local check_forces = function(event)
+
   if event.tick % 297 ~= 0 then return end
+
+  local enemy_force = game.forces.enemy
+  local max = enemy_force.evolution_factor
   for index, force in pairs (script_data.hive_mind_forces) do
     if force.valid then
+      max = math.max(max, force.evolution_factor)
+    else
+      script_data.hive_mind_forces[index] = nil
+    end
+  end
+
+  enemy_force.evolution_factor = max
+  for index, force in pairs (script_data.hive_mind_forces) do
+    if force.valid then
+      force.evolution_factor = max
       check_recipes(force)
     else
       script_data.hive_mind_forces[index] = nil
     end
   end
+
+end
+
+local on_tick = function(event)
+  check_forces(event)
 end
 
 local pollution_values =

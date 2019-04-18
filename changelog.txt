@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.3
+Date: 2019-04-18
+  Changes:
+    - Hive mind forces will always have the same evolution factor as the max across all hive mind forces.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.2
 Date: 2019-04-18
   Changes:
