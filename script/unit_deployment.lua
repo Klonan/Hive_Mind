@@ -405,7 +405,7 @@ local check_ghosts_on_tick = function(tick)
       entities[unit_number] = nil
     end
   end
-  data.spawner_tick_check[tick] = nil
+  data.ghost_tick_check[tick] = nil
 end
 
 local expiry_time = 600
