@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.2
-Date: 2019-04-??
+Date: 2019-04-18
   Changes:
     - Added ability of biter players to start fires, and balanced the pollution that forest fires will create.
     - Due to above, I disabled the 'mining to create pollution' mechanic.
