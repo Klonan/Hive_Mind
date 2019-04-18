@@ -38,23 +38,28 @@ end
 
 local convert_nest
 
+local be_friends = function(force_1, force_2)
+  force_1.set_cease_fire(force_2, true)
+  force_1.set_friend(force_2, true)
+  force_2.set_cease_fire(force_1, true)
+  force_2.set_friend(force_1, true)
+end
+
 local create_hivemind_force = function(player)
   local current_count = table_size(script_data.hive_mind_forces)
   local force = game.create_force("hivemind-"..current_count.."-"..game.tick)
   force.share_chart = true
 
   local enemy_force = game.forces.enemy
-  enemy_force.set_cease_fire(force, true)
-  enemy_force.set_friend(force, true)
   enemy_force.share_chart = true
-  force.set_cease_fire(enemy_force, true)
-  force.set_friend(enemy_force, true)
+  be_friends(force, enemy_force)
+
+  if game.forces.spectator then
+    be_friends(game.forces.spectator)
+  end
 
   for index, other_force in pairs (script_data.hive_mind_forces) do
-    other_force.set_cease_fire(force, true)
-    other_force.set_friend(force, true)
-    force.set_cease_fire(other_force, true)
-    force.set_friend(other_force, true)
+    be_friends(force, other_force)
   end
 
   force.disable_research()
