@@ -4,8 +4,8 @@ local mod_gui = require("mod-gui")
 local script_data =
 {
   player_lights = {},
-  hive_mind_forces = {},
-  previous_life_data = {}
+  previous_life_data = {},
+  player_spawns = {}
 }
 
 local recipe_evolution_factors =
@@ -30,12 +30,6 @@ local check_recipes = function(force)
   end
 end
 
---local max_hivemind_forces = 10
-local can_create_hivemind_force = function()
-  return #game.forces < 64
-  --return table_size(script_data.hive_mind_forces) < max_hivemind_forces
-end
-
 local convert_nest
 
 local be_friends = function(force_1, force_2)
@@ -45,9 +39,10 @@ local be_friends = function(force_1, force_2)
   force_2.set_friend(force_1, true)
 end
 
-local create_hivemind_force = function(player)
-  local current_count = table_size(script_data.hive_mind_forces)
-  local force = game.create_force("hivemind-"..current_count.."-"..game.tick)
+local create_hivemind_force = function()
+
+  local force = game.create_force("hivemind")
+
   force.share_chart = true
 
   local enemy_force = game.forces.enemy
@@ -58,39 +53,21 @@ local create_hivemind_force = function(player)
     be_friends(force, game.forces.spectator)
   end
 
-  for index, other_force in pairs (script_data.hive_mind_forces) do
-    be_friends(force, other_force)
-  end
-
   force.disable_research()
   force.evolution_factor = enemy_force.evolution_factor
   for k, recipe in pairs (force.recipes) do
     recipe.enabled = false
   end
   check_recipes(force)
-
-  convert_nest(player, force)
-
-  script_data.hive_mind_forces[force.index] = force
   return force
 end
 
-choose_hivemind_force = function(player)
-  return can_create_hivemind_force() and create_hivemind_force(player)
-  --if can_create_hivemind_force() then
-  --  return create_hivemind_force(player)
-  --end
-  --local array = {}
-  --local count = 1
-  --for index, force in pairs (script_data.hive_mind_forces) do
-  --  array[count] = force
-  --  count = count + 1
-  --end
-  --return array[1 + (player.index % count)]
+local get_hivemind_force = function()
+  return game.forces.hivemind or create_hivemind_force()
 end
 
 local is_hivemind_force = function(force)
-  return script_data.hive_mind_forces[force.index] ~= nil
+  return force.name == "hivemind"
 end
 
 local deploy_map =
@@ -138,7 +115,7 @@ local create_character = function(player)
     end
   end
   local surface = player.surface
-  local position = surface.find_non_colliding_position(name, force.get_spawn_position(surface), 64, 1)
+  local position = surface.find_non_colliding_position(name, script_data.player_spawns[player.index] or {0,0}, 64, 1)
   if not position then return end
   player.character = surface.create_entity
   {
@@ -163,7 +140,7 @@ local get_hive_entities = function(entity)
   local surface = entity.surface
   local find = surface.find_entities_filtered
   local params = {force = "enemy"}
-  local radius = 8
+  local radius = 12
   --local count = 1
   local function recursive_find_neighbors(entity)
     local unit_number = entity.unit_number
@@ -180,9 +157,11 @@ local get_hive_entities = function(entity)
   return map
 end
 
-convert_nest = function(player, force)
+convert_nest = function(player)
   local surface = player.surface
-  local origin = player.force.get_spawn_position(surface)
+  --local origin = player.force.get_spawn_position(surface)
+  local origin = player.position
+  local force = player.force
   local radius = 100
   local spawner
   local keep_going = true
@@ -202,8 +181,7 @@ convert_nest = function(player, force)
   end
   if not spawner then return end
   local position = spawner.position
-  force.set_spawn_position(position, surface)
-  local radius = 64
+  script_data.player_spawns[player.index] = position
   local entities = get_hive_entities(spawner)
   for k, nearby in pairs (entities) do
     local deploy_name = deploy_map[nearby.name]
@@ -270,11 +248,7 @@ local biter_quickbar =
 }
 
 join_hive = function(player)
-  local force = choose_hivemind_force(player)
-  if not force then
-    player.print{"hive-is-full"}
-    return
-  end
+  local force = get_hivemind_force()
   local get_quick_bar_slot = player.get_quick_bar_slot
   local set_quick_bar_slot = player.set_quick_bar_slot
   local quickbar = {}
@@ -297,6 +271,7 @@ join_hive = function(player)
   script_data.previous_life_data[player.index] = previous_life_data
   player.character = nil
   player.force = force
+  convert_nest(player)
   --player.game_view_settings.show_controller_gui = false
   create_character(player)
   player.tag = "[color=255,100,100]HIVE[/color]"
@@ -304,12 +279,11 @@ join_hive = function(player)
   game.print{"joined-hive", player.name}
 end
 
-local check_hivemind_disband = function(force)
-  if not is_hivemind_force(force) then return end
+local check_hivemind_disband = function()
+
+  local force = get_hivemind_force()
   if #force.players > 0 then
     --still players on this force, so its alright.
-    --Actually, I decided that only 1 player per force, so this should never happen
-    game.print("OOF, this should never happen! Are you cheesing with console commands??")
     return
   end
 
@@ -338,14 +312,11 @@ local check_hivemind_disband = function(force)
     end
   end
 
-  script_data.hive_mind_forces[force.index] = nil
-
   game.merge_forces(force, game.forces.enemy)
 
 end
 
 leave_hive = function(player)
-  local current_hivemind_force = player.force
 
   local previous_life_data = script_data.previous_life_data[player.index]
   local force = previous_life_data.force
@@ -386,8 +357,7 @@ leave_hive = function(player)
   player.tag = previous_life_data.tag or ""
 
   game.print{"left-hive", player.name}
-  --player.game_view_settings.show_controller_gui = true
-  check_hivemind_disband(current_hivemind_force)
+  check_hivemind_disband()
 
 end
 
@@ -403,25 +373,16 @@ local check_forces = function(event)
 
   if event.tick % 297 ~= 0 then return end
 
+  local hive_force = game.forces.hivemind
+  if not hive_force then return end
+
   local enemy_force = game.forces.enemy
-  local max = enemy_force.evolution_factor
-  for index, force in pairs (script_data.hive_mind_forces) do
-    if force.valid then
-      max = math.max(max, force.evolution_factor)
-    else
-      script_data.hive_mind_forces[index] = nil
-    end
-  end
+  local max = math.max(enemy_force.evolution_factor, hive_force.evolution_factor)
 
   enemy_force.evolution_factor = max
-  for index, force in pairs (script_data.hive_mind_forces) do
-    if force.valid then
-      force.evolution_factor = max
-      check_recipes(force)
-    else
-      script_data.hive_mind_forces[index] = nil
-    end
-  end
+  hive_force.evolution_factor = max
+
+  check_recipes(hive_force)
 
 end
 
@@ -506,7 +467,7 @@ end
 
 local on_player_changed_force = function(event)
   local old_force = event.force
-  check_hivemind_disband(old_force)
+  check_hivemind_disband()
 
   local player = game.get_player(event.player_index)
   gui_init(player)
@@ -539,6 +500,17 @@ end
 lib.on_load = function()
   script_data = global.hive_mind or script_data
   lib.on_event = handler(events)
+end
+
+lib.on_configuration_changed = function()
+  if script_data.hive_mind_forces then
+    local target = get_hivemind_force()
+    for k, force in pairs (script_data.hive_mind_forces) do
+      game.merge_forces(force, target)
+    end
+    script_data.hive_mind_forces = nil
+  end
+  script_data.player_spawns = script_data.player_spawns or {}
 end
 
 return lib
