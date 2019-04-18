@@ -55,7 +55,7 @@ local create_hivemind_force = function(player)
   be_friends(force, enemy_force)
 
   if game.forces.spectator then
-    be_friends(game.forces.spectator)
+    be_friends(force, game.forces.spectator)
   end
 
   for index, other_force in pairs (script_data.hive_mind_forces) do
@@ -482,6 +482,14 @@ local on_marked_for_deconstruction = function(event)
   end
 end
 
+local on_player_changed_force = function(event)
+  local old_force = event.force
+  check_hivemind_disband(old_force)
+
+  local player = game.get_player(event.player_index)
+  gui_init(player)
+end
+
 local events =
 {
   [defines.events.on_player_respawned] = on_player_respawned,
@@ -490,7 +498,8 @@ local events =
   [defines.events.on_player_joined_game] = on_player_joined_game,
   [defines.events.on_player_created] = on_player_created,
   [defines.events.on_gui_click] = on_gui_click,
-  [defines.events.on_marked_for_deconstruction] = on_marked_for_deconstruction
+  [defines.events.on_marked_for_deconstruction] = on_marked_for_deconstruction,
+  [defines.events.on_player_changed_force] = on_player_changed_force
 }
 
 local lib = {}
