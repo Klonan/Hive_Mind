@@ -70,7 +70,7 @@ local make_biter_player = function(name, graphics)
   player.character_corpse = nil
   player.corpse = graphics.corpse
   player.dying_explosion = graphics.dying_explosion
-  player.max_health = graphics.max_health
+  player.max_health = graphics.max_health * 1.5
   player.healing_per_tick = graphics.healing_per_tick
   player.tool_attack_distance = graphics.attack_parameters.range + 1
   player.tool_attack_result = graphics.attack_parameters.ammo_type.action
@@ -78,12 +78,13 @@ local make_biter_player = function(name, graphics)
   player.ticks_to_keep_aiming_direction = 0
   player.ticks_to_stay_in_combat = 0
   player.collision_mask = util.ground_unit_collision_mask()
-  player.mining_speed = 0.75
+  player.mining_speed = 0
   graphics.attack_parameters.animation = nil
   local gun =
   {
     type = "gun",
     name = name.."-gun",
+    localised_name = {"biter-gun"},
     icon = graphics.icon,
     icon_size = graphics.icon_size,
     subgroup = "gun",
@@ -98,6 +99,7 @@ local make_biter_player = function(name, graphics)
   {
     type = "ammo",
     name = name.."-ammo",
+    localised_name = {"biter-gun"},
     icon = graphics.icon,
     icon_size = graphics.icon_size,
     ammo_type = graphics.attack_parameters.ammo_type,
@@ -129,7 +131,7 @@ make_biter_player(names.players.behemoth_biter_player, util.copy(data.raw.unit["
 
 local fire_on_tree = data.raw.fire["fire-flame-on-tree"]
 fire_on_tree.emissions_per_second = 0.05
-fire_on_tree.damage_per_tick.amount = 3.5 / 60
+fire_on_tree.damage_per_tick.amount = 3 / 60
 fire_on_tree.spread_delay = 300
 fire_on_tree.initial_lifetime = 600
 fire_on_tree.tree_dying_factor = 0.98
@@ -141,8 +143,8 @@ local icon_size = 128
 
 
 local firestarter_attack_parameters = {
-  cooldown = 350,
-  range = 3,
+  cooldown = 60 * 20,
+  range = 5,
   type = "projectile",
   ammo_category = util.ammo_category("firestarter-gun"),
   ammo_consumption_modifier = 0,
@@ -170,6 +172,7 @@ local firestarter_gun =
 {
   type = "gun",
   name = shared.firestarter_gun,
+  localised_name = {shared.firestarter_gun},
   icon = icon,
   icon_size = icon_size,
   subgroup = "gun",
@@ -182,6 +185,7 @@ local firestarter_ammo =
 {
   type = "ammo",
   name = shared.firestarter_ammo,
+  localised_name = {shared.firestarter_gun},
   icon = icon,
   icon_size = icon_size,
   ammo_type = firestarter_ammo_type,

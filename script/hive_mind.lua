@@ -95,6 +95,18 @@ local add_biter_light = function(player)
   }
 end
 
+local reset_gun_inventory = function(player)
+  if not player.character then return end
+  local gun_inventory = player.character.get_inventory(defines.inventory.player_guns)
+  local ammo_inventory = player.character.get_inventory(defines.inventory.player_ammo)
+  gun_inventory.clear()
+  ammo_inventory.clear()
+  gun_inventory.insert(player.character.name.."-gun")
+  ammo_inventory.insert(player.character.name.."-ammo")
+  gun_inventory.insert(names.firestarter_gun)
+  ammo_inventory.insert(names.firestarter_ammo)
+end
+
 local characters =
 {
   [names.players.behemoth_biter_player] = 0.75,
@@ -123,10 +135,7 @@ local create_character = function(player)
     position = position,
     force = force
   }
-  player.character.get_inventory(defines.inventory.player_guns).insert(player.character.name.."-gun")
-  player.character.get_inventory(defines.inventory.player_ammo).insert(player.character.name.."-ammo")
-  player.character.get_inventory(defines.inventory.player_guns).insert(names.firestarter_gun)
-  player.character.get_inventory(defines.inventory.player_ammo).insert(names.firestarter_ammo)
+  reset_gun_inventory(player)
   add_biter_light(player)
 
 end
@@ -301,6 +310,7 @@ local check_hivemind_disband = function()
   }
 
   local params = {force = force}
+  local enemy_force = game.forces.enemy
   for surface_index, surface in pairs(game.surfaces) do
     for k, entity in pairs (surface.find_entities_filtered(params)) do
       if map[entity.name] then
@@ -308,11 +318,16 @@ local check_hivemind_disband = function()
         entity.destroy()
       elseif destroy_map_type[entity.type] then
         entity.destroy()
+      else
+        if entity.type == "unit" then
+          entity.ai_settings.allow_try_return_to_spawner = true
+        end
+        entity.force = enemy_force
       end
     end
   end
 
-  game.merge_forces(force, game.forces.enemy)
+  --game.merge_forces(force, game.forces.enemy)
 
 end
 
@@ -373,8 +388,7 @@ local check_forces = function(event)
 
   if event.tick % 297 ~= 0 then return end
 
-  local hive_force = game.forces.hivemind
-  if not hive_force then return end
+  local hive_force = get_hivemind_force()
 
   local enemy_force = game.forces.enemy
   local max = math.max(enemy_force.evolution_factor, hive_force.evolution_factor)
@@ -473,6 +487,60 @@ local on_player_changed_force = function(event)
   gui_init(player)
 end
 
+local allowed_types =
+{
+  ["blueprint"] = true,
+  ["copy-paste-tool"] = true,
+  ["selection-tool"] = true,
+  ["deconstruction-item"] = true,
+  ["gun"] = true,
+  ["ammo"] = true,
+
+}
+
+local on_player_cursor_stack_changed = function(event)
+  local player = game.get_player(event.player_index)
+  if not (player and player.valid) then return end
+  if not is_hivemind_force(player.force) then return end
+  local stack = player.cursor_stack
+  if not stack.valid_for_read then return end
+  if allowed_types[stack.type] then return end
+
+  player.print({"biters-cant-hold", stack.prototype.localised_name})
+  player.surface.spill_item_stack(player.position, stack, false, nil, false)
+  stack.clear()
+end
+
+local on_player_gun_inventory_changed = function(event)
+  local player = game.get_player(event.player_index)
+  if not (player and player.valid) then return end
+  if not is_hivemind_force(player.force) then return end
+  reset_gun_inventory(player)
+end
+
+local on_player_ammo_inventory_changed = function(event)
+  local player = game.get_player(event.player_index)
+  if not (player and player.valid) then return end
+  if not is_hivemind_force(player.force) then return end
+  reset_gun_inventory(player)
+end
+
+local on_player_ammo_inventory_changed = function(event)
+  local player = game.get_player(event.player_index)
+  if not (player and player.valid) then return end
+  if not is_hivemind_force(player.force) then return end
+  reset_gun_inventory(player)
+end
+
+local on_player_armor_inventory_changed = function(event)
+  local player = game.get_player(event.player_index)
+  if not (player and player.valid) then return end
+  if not is_hivemind_force(player.force) then return end
+  if not player.character then return end
+  local armor_inventory = player.get_inventory(defines.inventory.player_armor)
+  armor_inventory.clear()
+end
+
 local events =
 {
   [defines.events.on_player_respawned] = on_player_respawned,
@@ -482,7 +550,12 @@ local events =
   [defines.events.on_player_created] = on_player_created,
   [defines.events.on_gui_click] = on_gui_click,
   [defines.events.on_marked_for_deconstruction] = on_marked_for_deconstruction,
-  [defines.events.on_player_changed_force] = on_player_changed_force
+  [defines.events.on_player_changed_force] = on_player_changed_force,
+  [defines.events.on_player_cursor_stack_changed] = on_player_cursor_stack_changed,
+  [defines.events.on_player_gun_inventory_changed] = on_player_gun_inventory_changed,
+  [defines.events.on_player_ammo_inventory_changed] = on_player_ammo_inventory_changed,
+  [defines.events.on_player_armor_inventory_changed] = on_player_armor_inventory_changed,
+
 }
 
 local lib = {}
@@ -495,6 +568,10 @@ lib.on_init = function()
   for k, player in pairs (game.players) do
     gui_init(player)
   end
+  game.map_settings.pollution.min_to_diffuse = 5
+  game.map_settings.pollution.diffusion_ratio = 0.04
+  game.map_settings.pollution.expected_max_per_chunk = 500
+  game.map_settings.pollution.min_to_show_per_chunk = 100
 end
 
 lib.on_load = function()

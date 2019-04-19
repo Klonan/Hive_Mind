@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.6
+Date: 2019-04-19
+  Changes:
+    - Hivemind players will all be on the same force. This fixes some issues like hivemind players not being able to chat with eachother.
+    - I tweaked some map pollution settings, so it spreads and shows a bitter better.
+    - Biter players can no longer pickup hold things they shouldn't be able to, like belts, furnaces etc.
+    - Biter players can no longer equip armor or other guns.
+    - Biter spawning is now affected by 'enemy_attack_pollution_consumption_modifier' of the map.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.5
 Date: 2019-04-18
   Changes:
