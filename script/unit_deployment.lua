@@ -20,7 +20,7 @@ local get_enemy_attack_pollution_consumption_modifier = function()
   return data.enemy_attack_pollution_consumption_modifier
 end
 
-local max_pop_count = 200
+local max_pop_count = 1000
 local can_spawn_units = function(force_index)
   return data.pop_count[force_index] < max_pop_count
 end
@@ -138,17 +138,17 @@ local check_spawner = function(spawner_data)
 
     current_energy = current_energy + (pollution_to_take / pollution_scale)
     --assert(current_energy <= 1)
-    if current_energy > 1.15 then
-      error(serpent.block{
-        current_energy = current_energy,
-        pollution_to_take = pollution_to_take,
-        current_energy = current_energy,
-        current_pollution = current_pollution,
-        recipe_energy = recipe.energy,
-        recipe_progress = entity.crafting_progress,
-        total_pollution_needed_to_spawn = total_pollution_needed_to_spawn,
-      })
-    end
+    --if current_energy > 1.15 then
+    --  error(serpent.block{
+    --    current_energy = current_energy,
+    --    pollution_to_take = pollution_to_take,
+    --    current_energy = current_energy,
+    --    current_pollution = current_pollution,
+    --    recipe_energy = recipe.energy,
+    --    recipe_progress = entity.crafting_progress,
+    --    total_pollution_needed_to_spawn = total_pollution_needed_to_spawn,
+    --  })
+    --end
     entity.crafting_progress = current_energy
 
     pollution_to_take = pollution_to_take * get_enemy_attack_pollution_consumption_modifier()
