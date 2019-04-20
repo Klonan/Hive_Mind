@@ -73,7 +73,8 @@ local pollution_scale = 5
 
 --Max pollution each spawner can absorb is 10% of whatever the chunk has.
 local pollution_percent_to_take = 0.1
-local pollution_max_percent_as_progress = 1
+
+local min_to_take = 1
 
 local prototype_cache = {}
 
@@ -95,13 +96,9 @@ local check_spawner = function(spawner_data)
 
   local recipe = entity.get_recipe()
   if not recipe then
-    if spawner_data.background then
+    if spawner_data.progress and rendering.is_valid(spawner_data.progress) then
       rendering.destroy(spawner_data.background)
-      spawner_data.background = nil
-    end
-    if spawner_data.progress_bar then
-      rendering.destroy(spawner_data.progress_bar)
-      spawner_data.progress_bar = nil
+      spawner_data.progress = nil
     end
     return
   end
@@ -129,9 +126,12 @@ local check_spawner = function(spawner_data)
   if current_energy < 1 then
 
     local pollution_to_take = pollution * pollution_percent_to_take
+    if pollution_percent_to_take < min_to_take then
+      pollution_percent_to_take = math.min(min_to_take, pollution)
+    end
     local energy = recipe.energy
 
-    local total_pollution_needed_to_spawn = energy
+    local total_pollution_needed_to_spawn = energy * pollution_scale
     local current_pollution = current_energy * total_pollution_needed_to_spawn
 
     pollution_to_take = min(pollution_to_take, (total_pollution_needed_to_spawn - current_pollution))
@@ -158,22 +158,50 @@ local check_spawner = function(spawner_data)
     force.item_production_statistics.on_flow(shared.pollution_proxy, -pollution_to_take)
   end
 
+
   local progress = spawner_data.progress
-  if progress and progress.valid then
-    progress.text = math.floor(current_energy * 100) .. "%"
+  if type(progress) == "table" then
+    if progress.valid then
+      progress.destroy()
+    end
+    --Old time it was a flying text... can remove in a while
+    progress = nil
+    spawner_data.progress = nil
+  end
+
+  if progress and rendering.is_valid(progress) then
+    rendering.set_text(progress, math.floor(current_energy * 100) .. "%")
   else
-    progress = surface.create_entity
+    progress = rendering.draw_text
     {
-      name = "tutorial-flying-text",
       text = math.floor(current_energy * 100) .. "%",
-      position = position,
-      color = progress_color
+      surface = surface,
+      target = entity,
+      --target_offset = {0, 1},
+      color = progress_color,
+      alignment = "center",
+      forces = {force},
+      scale = 3
     }
-    progress.active = false
     spawner_data.progress = progress
   end
 
+
 end
+
+--[[    text :: LocalisedString: The text to display.
+    surface :: SurfaceSpecification
+    target :: Position or LuaEntity
+    target_offset :: Vector (optional): Only used if target is a LuaEntity.
+    color :: Color
+    scale :: double (optional)
+    font :: string (optional): Name of font to use. Defaults to the same font as flying-text.
+    time_to_live :: uint (optional): In ticks. Defaults to living forever.
+    forces :: array of ForceSpecification (optional): The forces that this object is rendered to.
+    players :: array of PlayerSpecification (optional): The players that this object is rendered to.
+    orientation :: float (optional): The orientation of the text. Default is 0.
+    alignment :: string (optional): Defaults to "left". Other options are "right" and "center".
+    scale_with_zoom :: boolean (optional): Defaults to false. If true, the text is always the same size, regardless of player zoom.]]
 
 local teleport_unit_away = function(unit, area)
   local center = util.center(area)
@@ -262,15 +290,7 @@ local check_ghost = function(ghost_data)
   end
 
   if ghost_data.required_pollution <= 0 then
-    local success = try_to_revive_entity(entity)
-    if success then
-      local progress = ghost_data.progress
-      if progress and progress.valid then
-        progress.destroy()
-      end
-      return true
-    end
-    return
+    return try_to_revive_entity(entity)
   end
 
   local origin = entity.position
@@ -281,7 +301,7 @@ local check_ghost = function(ghost_data)
     type = defines.command.go_to_location,
     destination_entity = entity,
     distraction = defines.distraction.none,
-    radius = 1
+    radius = 0.2
   }
 
   local needed_pollution = ghost_data.required_pollution
@@ -300,22 +320,35 @@ local check_ghost = function(ghost_data)
   end
 
   local progress = ghost_data.progress
-  if progress and progress.valid then
-    progress.text = math.floor((1 - (ghost_data.required_pollution / required_pollution[entity.ghost_name])) * 100) .. "%"
+  if type(progress) == "table" then
+    if progress.valid then
+      progress.destroy()
+    end
+    --Old time it was a flying text... can remove in a while
+    progress = nil
+    ghost_data.progress = nil
+  end
+
+  if progress and rendering.is_valid(progress) then
+    rendering.set_text(progress, math.floor((1 - (ghost_data.required_pollution / required_pollution[entity.ghost_name])) * 100) .. "%")
   else
-    progress = surface.create_entity
+    progress = rendering.draw_text
     {
-      name = "tutorial-flying-text",
       text = math.floor((1 - (ghost_data.required_pollution / required_pollution[entity.ghost_name])) * 100) .. "%",
-      position = entity.position,
-      color = progress_color
+      surface = surface,
+      target = entity,
+      --target_offset = {0, 1},
+      color = progress_color,
+      alignment = "center",
+      forces = {force},
+      scale = 3
     }
-    progress.active = false
     ghost_data.progress = progress
   end
 
+
   local radius = ghost_data.radius
-  if not radius then
+  if not (radius and rendering.is_valid(radius)) then
     radius = rendering.draw_circle
     {
       color = {r = 0.8, g = 0.8},
@@ -485,11 +518,6 @@ local on_entity_died = function(event)
   if not spawner_data then return end
   entity.destroy()
   data.proxies[unit_number] = nil
-
-  local progress = spawner_data.progress
-  if progress and progress.valid then
-    progress.destroy()
-  end
 
   local spawner = spawner_data.entity
   if spawner and spawner.valid then
