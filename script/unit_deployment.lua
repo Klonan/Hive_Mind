@@ -127,33 +127,19 @@ local check_spawner = function(spawner_data)
 
     local pollution_to_take = pollution * pollution_percent_to_take
     if pollution_percent_to_take < min_to_take then
-      pollution_percent_to_take = math.min(min_to_take, pollution)
+      pollution_percent_to_take = min(min_to_take, pollution)
     end
-    local energy = recipe.energy
 
-    local total_pollution_needed_to_spawn = energy * pollution_scale
+    local energy = recipe.energy
+    local total_pollution_needed_to_spawn = energy * pollution_scale * get_enemy_attack_pollution_consumption_modifier()
     local current_pollution = current_energy * total_pollution_needed_to_spawn
 
     pollution_to_take = min(pollution_to_take, (total_pollution_needed_to_spawn - current_pollution))
 
-    current_energy = current_energy + (pollution_to_take / pollution_scale)
-    --assert(current_energy <= 1)
-    --if current_energy > 1.15 then
-    --  error(serpent.block{
-    --    current_energy = current_energy,
-    --    pollution_to_take = pollution_to_take,
-    --    current_energy = current_energy,
-    --    current_pollution = current_pollution,
-    --    recipe_energy = recipe.energy,
-    --    recipe_progress = entity.crafting_progress,
-    --    total_pollution_needed_to_spawn = total_pollution_needed_to_spawn,
-    --  })
-    --end
+    current_energy = current_energy + ((pollution_to_take / pollution_scale) / get_enemy_attack_pollution_consumption_modifier())
     entity.crafting_progress = current_energy
 
-    pollution_to_take = pollution_to_take * get_enemy_attack_pollution_consumption_modifier()
-
-    surface.pollute(position, -(pollution_to_take))
+    surface.pollute(position, -pollution_to_take)
     game.pollution_statistics.on_flow(entity.name, -pollution_to_take)
     force.item_production_statistics.on_flow(shared.pollution_proxy, -pollution_to_take)
   end
@@ -466,7 +452,7 @@ local check_not_idle_units = function(tick)
 end
 
 local check_update_map_settings = function(tick)
-  if tick and tick % 600 ~= 0 then return end
+  if tick and tick % 6 ~= 0 then return end
   data.destroy_factor = game.map_settings.enemy_evolution.destroy_factor
   data.enemy_attack_pollution_consumption_modifier = game.map_settings.pollution.enemy_attack_pollution_consumption_modifier
 end
