@@ -543,6 +543,14 @@ local on_player_armor_inventory_changed = function(event)
   armor_inventory.clear()
 end
 
+local set_map_settings = function()
+  game.map_settings.pollution.enabled = true
+  game.map_settings.pollution.min_to_diffuse = 10
+  game.map_settings.pollution.diffusion_ratio = 0.03
+  game.map_settings.pollution.expected_max_per_chunk = 500
+  game.map_settings.pollution.min_to_show_per_chunk = 100
+end
+
 local events =
 {
   [defines.events.on_player_respawned] = on_player_respawned,
@@ -570,10 +578,7 @@ lib.on_init = function()
   for k, player in pairs (game.players) do
     gui_init(player)
   end
-  game.map_settings.pollution.min_to_diffuse = 5
-  game.map_settings.pollution.diffusion_ratio = 0.04
-  game.map_settings.pollution.expected_max_per_chunk = 500
-  game.map_settings.pollution.min_to_show_per_chunk = 100
+  set_map_settings()
 end
 
 lib.on_load = function()
@@ -590,6 +595,7 @@ lib.on_configuration_changed = function()
     script_data.hive_mind_forces = nil
   end
   script_data.player_spawns = script_data.player_spawns or {}
+  set_map_settings()
 end
 
 return lib

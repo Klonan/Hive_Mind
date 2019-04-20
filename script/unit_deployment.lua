@@ -22,7 +22,7 @@ end
 
 local max_pop_count = 200
 local can_spawn_units = function(force_index)
-  return data.pop_count[force_index] <= max_pop_count
+  return data.pop_count[force_index] < max_pop_count
 end
 
 local names = names.deployers
@@ -40,7 +40,7 @@ local direction_enum = {
   [defines.direction.west] = {-2, 0}
 }
 
-local deploy_unit = function(source, prototype, count)
+local deploy_unit = function(source, prototype)
   if not (source and source.valid) then return end
   local direction = source.direction
   local offset = direction_enum[direction]
@@ -52,23 +52,18 @@ local deploy_unit = function(source, prototype, count)
   local position = {source.position.x + offset[1], source.position.y + offset[2]}
   local surface = source.surface
   local force = source.force
-  local deployed = 0
   local find_non_colliding_position = surface.find_non_colliding_position
   local create_entity = surface.create_entity
   local on_flow = force.item_production_statistics.on_flow
   local deploy_position = find_non_colliding_position(name, position, 0, 1)
   local blood = {name = "blood-explosion-big", position = deploy_position}
   local create_param = {name = name, position = deploy_position, force = force, direction = direction}
-  for k = 1, count do
-    --if not surface.valid then break end
-    create_entity(blood)
-    local unit = create_entity(create_param)
-    on_flow(name, 1)
-    script.raise_event(defines.events.on_entity_spawned, {entity = unit, spawner = source})
-    deployed = deployed + 1
-  end
+  create_entity(blood)
+  local unit = create_entity(create_param)
+  on_flow(name, 1)
+  script.raise_event(defines.events.on_entity_spawned, {entity = unit, spawner = source})
   local index = force.index
-  data.pop_count[index] = data.pop_count[index] + deployed
+  data.pop_count[index] = data.pop_count[index] + 1
   return deployed
 end
 
@@ -90,10 +85,12 @@ local get_prototype = function(name)
   return prototype
 end
 local min = math.min
+
+local progress_color = {r = 0.8, g = 0.8}
+
 local check_spawner = function(spawner_data)
   local entity = spawner_data.entity
   if not (entity and entity.valid) then return true end
-
   --entity.surface.create_entity{name = "flying-text", position = entity.position, text = game.tick % 60}
 
   local recipe = entity.get_recipe()
@@ -119,13 +116,14 @@ local check_spawner = function(spawner_data)
   local prototype = get_prototype(recipe_name)
   local pollution = surface.get_pollution(position)
 
-  if can_spawn_units() then
+  if can_spawn_units(force.index) then
     local item_count = entity.get_item_count(recipe_name)
     if item_count > 0 then
-      local count = deploy_unit(entity, prototype, item_count)
-      entity.remove_item{name = recipe_name, count = count}
+      local count = deploy_unit(entity, prototype)
+      entity.remove_item{name = recipe_name, count = 1}
     end
   end
+
   local current_energy = entity.crafting_progress
 
   if current_energy < 1 then
@@ -160,38 +158,20 @@ local check_spawner = function(spawner_data)
     force.item_production_statistics.on_flow(shared.pollution_proxy, -pollution_to_take)
   end
 
-  local background = spawner_data.background
-  if not background then
-    background = rendering.draw_line
+  local progress = spawner_data.progress
+  if progress and progress.valid then
+    progress.text = math.floor(current_energy * 100) .. "%"
+  else
+    progress = surface.create_entity
     {
-      color = {r = 0, b = 0, g = 0},
-      width = 10,
-      from = entity,
-      from_offset = {-33/32, 1},
-      to = entity,
-      to_offset = {33/32, 1},
-      surface = entity.surface,
-      forces = {entity.force}
+      name = "tutorial-flying-text",
+      text = math.floor(current_energy * 100) .. "%",
+      position = position,
+      color = progress_color
     }
-    spawner_data.background = background
+    progress.active = false
+    spawner_data.progress = progress
   end
-
-  local progress_bar = spawner_data.progress_bar
-  if not progress_bar then
-    progress_bar = rendering.draw_line
-    {
-      color = {r = 1, g = 0.5},
-      width = 8,
-      from = entity,
-      from_offset = {-1, 1},
-      to = entity,
-      to_offset = {1, 1},
-      surface = entity.surface,
-      forces = {entity.force}
-    }
-    spawner_data.progress_bar = progress_bar
-  end
-  rendering.set_to(spawner_data.progress_bar, entity, {(2 * current_energy) - 1, 1})
 
 end
 
@@ -263,6 +243,7 @@ local get_sacrifice_radius = function()
   return 24
 end
 
+
 local check_ghost = function(ghost_data)
   local entity = ghost_data.entity
   if not (entity and entity.valid) then return true end
@@ -281,7 +262,15 @@ local check_ghost = function(ghost_data)
   end
 
   if ghost_data.required_pollution <= 0 then
-    return try_to_revive_entity(entity)
+    local success = try_to_revive_entity(entity)
+    if success then
+      local progress = ghost_data.progress
+      if progress and progress.valid then
+        progress.destroy()
+      end
+      return true
+    end
+    return
   end
 
   local origin = entity.position
@@ -310,39 +299,20 @@ local check_ghost = function(ghost_data)
     end
   end
 
-  local background = ghost_data.background
-  if not background then
-    background = rendering.draw_line
+  local progress = ghost_data.progress
+  if progress and progress.valid then
+    progress.text = math.floor((1 - (ghost_data.required_pollution / required_pollution[entity.ghost_name])) * 100) .. "%"
+  else
+    progress = surface.create_entity
     {
-      color = {r = 0, b = 0, g = 0},
-      width = 10,
-      from = entity,
-      from_offset = {-33/32, 1},
-      to = entity,
-      to_offset = {33/32, 1},
-      surface = entity.surface,
-      forces = {entity.force}
+      name = "tutorial-flying-text",
+      text = math.floor((1 - (ghost_data.required_pollution / required_pollution[entity.ghost_name])) * 100) .. "%",
+      position = entity.position,
+      color = progress_color
     }
-    ghost_data.background = background
+    progress.active = false
+    ghost_data.progress = progress
   end
-
-  local progress_bar = ghost_data.progress_bar
-  if not progress_bar then
-    progress_bar = rendering.draw_line
-    {
-      color = {r = 1, g = 0},
-      width = 8,
-      from = entity,
-      from_offset = {-1, 1},
-      to = entity,
-      to_offset = {1, 1},
-      surface = entity.surface,
-      forces = {entity.force}
-    }
-    ghost_data.progress_bar = progress_bar
-  end
-
-  rendering.set_to(ghost_data.progress_bar, entity, {(2 * (1 - (ghost_data.required_pollution / required_pollution[entity.ghost_name]))) - 1, 1})
 
   local radius = ghost_data.radius
   if not radius then
@@ -425,13 +395,15 @@ local check_spawners_on_tick = function(tick)
   local entities = data.spawner_tick_check[tick]
   if not entities then return end
   --local profiler = game.create_profiler()
+  --local count = 0
   data.spawner_tick_check[tick + spawners_update_interval] = entities
   for unit_number, spawner_data in pairs (entities) do
-
+    --count = count + 1
     if check_spawner(spawner_data) then
       entities[unit_number] = nil
     end
   end
+  --game.print(tick.." - - "..count)
   data.spawner_tick_check[tick] = nil
   --game.print({"", profiler, "    "..game.tick})
 end
@@ -448,8 +420,7 @@ local check_ghosts_on_tick = function(tick)
   data.ghost_tick_check[tick] = nil
 end
 
-local expiry_time = 600
-local sanity_max = 100
+local expiry_time = 180
 local check_not_idle_units = function(tick)
   if tick % expiry_time ~= 0 then return end
   local expiry_tick = tick - expiry_time
@@ -457,11 +428,6 @@ local check_not_idle_units = function(tick)
   for unit_number, unit_data in pairs (data.not_idle_units) do
     if unit_data.tick <= expiry_tick then
       data.not_idle_units[unit_number] = nil
-    end
-    max = max - 1
-    if max <= 0 then
-      --game.print("INSANE!!")
-      return
     end
   end
 end
@@ -487,8 +453,9 @@ end
 
 local check_update_pop_cap = function(tick)
   if tick and tick % 60 ~= 0 then return end
-  local profiler = game.create_profiler()
+  --local profiler = game.create_profiler()
   local list = get_units()
+  data.pop_count = {}
   for name, force in pairs (game.forces) do
     local total = 0
     local get_entity_count = force.get_entity_count
@@ -498,7 +465,7 @@ local check_update_pop_cap = function(tick)
     local index = force.index
     data.pop_count[index] = total
   end
-  game.print({"", game.tick, profiler})
+  --game.print({"", game.tick, profiler})
 end
 
 local on_tick = function(event)
@@ -518,11 +485,18 @@ local on_entity_died = function(event)
   if not spawner_data then return end
   entity.destroy()
   data.proxies[unit_number] = nil
+
+  local progress = spawner_data.progress
+  if progress and progress.valid then
+    progress.destroy()
+  end
+
   local spawner = spawner_data.entity
-  if not (spawner and spawner.valid) then return end
-  spawner.destructible = true
-  spawner.force.evolution_factor = spawner.force.evolution_factor + (1 * get_destroy_factor())
-  spawner.die()
+  if spawner and spawner.valid then
+    spawner.destructible = true
+    spawner.force.evolution_factor = spawner.force.evolution_factor + (1 * get_destroy_factor())
+    spawner.die()
+  end
 end
 
 local on_ai_command_completed = function(event)
@@ -550,6 +524,7 @@ unit_deployment.get_events = function() return events end
 unit_deployment.on_init = function()
   global.unit_deployment = global.unit_deployment or data
   check_update_map_settings()
+  check_update_pop_cap()
   unit_deployment.on_event = handler(events)
 end
 
@@ -561,6 +536,7 @@ end
 unit_deployment.on_configuration_changed = function()
   check_update_map_settings()
   check_update_pop_cap()
+  rendering.clear()
 end
 
 return unit_deployment
