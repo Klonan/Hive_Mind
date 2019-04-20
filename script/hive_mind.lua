@@ -5,8 +5,10 @@ local script_data =
 {
   player_lights = {},
   previous_life_data = {},
-  player_spawns = {}
+  player_spawns = {},
+
 }
+
 
 local recipe_evolution_factors =
 {

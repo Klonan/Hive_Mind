@@ -5,8 +5,25 @@ local data =
   spawner_tick_check = {},
   ghost_tick_check = {},
   not_idle_units = {},
-  proxies = {}
+  proxies = {},
+  destroy_factor = 0.002,
+  enemy_attack_pollution_consumption_modifier = 1,
+  can_spawn = false,
+  pop_count = {}
 }
+
+local get_destroy_factor = function()
+  return data.destroy_factor
+end
+
+local get_enemy_attack_pollution_consumption_modifier = function()
+  return data.enemy_attack_pollution_consumption_modifier
+end
+
+local max_pop_count = 200
+local can_spawn_units = function(force_index)
+  return data.pop_count[force_index] <= max_pop_count
+end
 
 local names = names.deployers
 local units = names.units
@@ -17,10 +34,10 @@ for k, deployer in pairs (names) do
 end
 
 local direction_enum = {
-  [defines.direction.north] = {0, -1},
-  [defines.direction.south] = {0, 1},
-  [defines.direction.east] = {1, 0},
-  [defines.direction.west] = {-1, 0}
+  [defines.direction.north] = {0, -2},
+  [defines.direction.south] = {0, 2},
+  [defines.direction.east] = {2, 0},
+  [defines.direction.west] = {-2, 0}
 }
 
 local deploy_unit = function(source, prototype, count)
@@ -30,25 +47,28 @@ local deploy_unit = function(source, prototype, count)
   local name = prototype.name
   local deploy_bounding_box = prototype.collision_box
   local bounding_box = source.bounding_box
-  local offset_x = offset[1] * ((bounding_box.right_bottom.x - bounding_box.left_top.x) / 2) + ((deploy_bounding_box.right_bottom.x - deploy_bounding_box.left_top.x) / 2)
-  local offset_y = offset[2] * ((bounding_box.right_bottom.y - bounding_box.left_top.y) / 2) + ((deploy_bounding_box.right_bottom.y - deploy_bounding_box.left_top.y) / 2)
-  local position = {source.position.x + offset_x, source.position.y + offset_y}
+  --local offset_x = offset[1] * ((bounding_box.right_bottom.x - bounding_box.left_top.x) / 2) + ((deploy_bounding_box.right_bottom.x - deploy_bounding_box.left_top.x) / 2)
+  --local offset_y = offset[2] * ((bounding_box.right_bottom.y - bounding_box.left_top.y) / 2) + ((deploy_bounding_box.right_bottom.y - deploy_bounding_box.left_top.y) / 2)
+  local position = {source.position.x + offset[1], source.position.y + offset[2]}
   local surface = source.surface
   local force = source.force
   local deployed = 0
-  local can_place_entity = surface.can_place_entity
   local find_non_colliding_position = surface.find_non_colliding_position
   local create_entity = surface.create_entity
+  local on_flow = force.item_production_statistics.on_flow
+  local deploy_position = find_non_colliding_position(name, position, 0, 1)
+  local blood = {name = "blood-explosion-big", position = deploy_position}
+  local create_param = {name = name, position = deploy_position, force = force, direction = direction}
   for k = 1, count do
-    if not surface.valid then break end
-    local deploy_position = find_non_colliding_position(name, position, 0, 0.2)
-    create_entity{name = "blood-explosion-big", position = deploy_position}
-    create_entity{name = "blood-fountain", position = deploy_position}
-    local unit = create_entity{name = name, position = deploy_position, force = force, direction = direction}
-    unit.force.item_production_statistics.on_flow(name, 1)
+    --if not surface.valid then break end
+    create_entity(blood)
+    local unit = create_entity(create_param)
+    on_flow(name, 1)
     script.raise_event(defines.events.on_entity_spawned, {entity = unit, spawner = source})
     deployed = deployed + 1
   end
+  local index = force.index
+  data.pop_count[index] = data.pop_count[index] + deployed
   return deployed
 end
 
@@ -57,8 +77,7 @@ end
 local pollution_scale = 5
 
 --Max pollution each spawner can absorb is 10% of whatever the chunk has.
-local pollution_max_percent = 0.1
-local min_to_take = 1
+local pollution_percent_to_take = 0.1
 local pollution_max_percent_as_progress = 1
 
 local prototype_cache = {}
@@ -70,9 +89,8 @@ local get_prototype = function(name)
   prototype_cache[name] = prototype
   return prototype
 end
-
+local min = math.min
 local check_spawner = function(spawner_data)
-
   local entity = spawner_data.entity
   if not (entity and entity.valid) then return true end
 
@@ -91,35 +109,56 @@ local check_spawner = function(spawner_data)
     return
   end
 
-  local prototype = get_prototype(recipe.name)
-  local pollution = entity.surface.get_pollution(entity.position)
+  local surface = entity.surface
+  local force = entity.force
+  local position = entity.position
+  local item_production_statistics = force.item_production_statistics
 
-  local pollution_to_take = math.max(math.min(pollution, min_to_take), pollution * pollution_max_percent)
+  local recipe_name = recipe.name
 
-  local max_progress = recipe.energy * game.map_settings.pollution.enemy_attack_pollution_consumption_modifier
-  pollution_to_take = math.min(pollution_to_take, (max_progress * pollution_max_percent_as_progress) / pollution_scale)
-  local added_progress = pollution_to_take * pollution_scale
+  local prototype = get_prototype(recipe_name)
+  local pollution = surface.get_pollution(position)
 
-  local progress_percent = entity.crafting_progress
-  local progress_amount = progress_percent * max_progress
-  local new_progress = progress_amount + added_progress
-  while new_progress >= max_progress do
-    new_progress = new_progress - max_progress
-    -- Fragile!
-    deploy_unit(entity, prototype, 1)
-    entity.force.item_production_statistics.on_flow(recipe.name, 1)
+  if can_spawn_units() then
+    local item_count = entity.get_item_count(recipe_name)
+    if item_count > 0 then
+      local count = deploy_unit(entity, prototype, item_count)
+      entity.remove_item{name = recipe_name, count = count}
+    end
   end
+  local current_energy = entity.crafting_progress
 
-  local item_count = entity.get_item_count(recipe.name)
-  if item_count > 0 then
-    deploy_unit(entity, prototype, item_count)
-    entity.remove_item{name = recipe.name, count = item_count}
+  if current_energy < 1 then
+
+    local pollution_to_take = pollution * pollution_percent_to_take
+    local energy = recipe.energy
+
+    local total_pollution_needed_to_spawn = energy
+    local current_pollution = current_energy * total_pollution_needed_to_spawn
+
+    pollution_to_take = min(pollution_to_take, (total_pollution_needed_to_spawn - current_pollution))
+
+    current_energy = current_energy + (pollution_to_take / pollution_scale)
+    --assert(current_energy <= 1)
+    if current_energy > 1.15 then
+      error(serpent.block{
+        current_energy = current_energy,
+        pollution_to_take = pollution_to_take,
+        current_energy = current_energy,
+        current_pollution = current_pollution,
+        recipe_energy = recipe.energy,
+        recipe_progress = entity.crafting_progress,
+        total_pollution_needed_to_spawn = total_pollution_needed_to_spawn,
+      })
+    end
+    entity.crafting_progress = current_energy
+
+    pollution_to_take = pollution_to_take * get_enemy_attack_pollution_consumption_modifier()
+
+    surface.pollute(position, -(pollution_to_take))
+    game.pollution_statistics.on_flow(entity.name, -pollution_to_take)
+    force.item_production_statistics.on_flow(shared.pollution_proxy, -pollution_to_take)
   end
-
-  entity.crafting_progress = new_progress / max_progress
-  entity.surface.pollute(entity.position, -pollution_to_take)
-  game.pollution_statistics.on_flow(entity.name, -pollution_to_take)
-  entity.force.item_production_statistics.on_flow(shared.pollution_proxy, -pollution_to_take)
 
   local background = spawner_data.background
   if not background then
@@ -152,7 +191,7 @@ local check_spawner = function(spawner_data)
     }
     spawner_data.progress_bar = progress_bar
   end
-  rendering.set_to(spawner_data.progress_bar, entity, {(2 * (new_progress / max_progress)) - 1, 1})
+  rendering.set_to(spawner_data.progress_bar, entity, {(2 * current_energy) - 1, 1})
 
 end
 
@@ -388,6 +427,7 @@ local check_spawners_on_tick = function(tick)
   --local profiler = game.create_profiler()
   data.spawner_tick_check[tick + spawners_update_interval] = entities
   for unit_number, spawner_data in pairs (entities) do
+
     if check_spawner(spawner_data) then
       entities[unit_number] = nil
     end
@@ -426,10 +466,47 @@ local check_not_idle_units = function(tick)
   end
 end
 
+local check_update_map_settings = function(tick)
+  if tick and tick % 600 ~= 0 then return end
+  data.destroy_factor = game.map_settings.enemy_evolution.destroy_factor
+  data.enemy_attack_pollution_consumption_modifier = game.map_settings.pollution.enemy_attack_pollution_consumption_modifier
+end
+
+local unit_list
+
+local get_units = function()
+  if unit_list then return unit_list end
+  unit_list = {}
+  for name, prototype in pairs (game.entity_prototypes) do
+    if prototype.type == "unit" then
+      table.insert(unit_list, name)
+    end
+  end
+  return unit_list
+end
+
+local check_update_pop_cap = function(tick)
+  if tick and tick % 60 ~= 0 then return end
+  local profiler = game.create_profiler()
+  local list = get_units()
+  for name, force in pairs (game.forces) do
+    local total = 0
+    local get_entity_count = force.get_entity_count
+    for k = 1, #list do
+      total = total + get_entity_count(list[k])
+    end
+    local index = force.index
+    data.pop_count[index] = total
+  end
+  game.print({"", game.tick, profiler})
+end
+
 local on_tick = function(event)
   check_spawners_on_tick(event.tick)
   check_ghosts_on_tick(event.tick)
   check_not_idle_units(event.tick)
+  check_update_map_settings(event.tick)
+  check_update_pop_cap(event.tick)
 end
 
 local on_entity_died = function(event)
@@ -444,6 +521,7 @@ local on_entity_died = function(event)
   local spawner = spawner_data.entity
   if not (spawner and spawner.valid) then return end
   spawner.destructible = true
+  spawner.force.evolution_factor = spawner.force.evolution_factor + (1 * get_destroy_factor())
   spawner.die()
 end
 
@@ -471,12 +549,18 @@ unit_deployment.get_events = function() return events end
 
 unit_deployment.on_init = function()
   global.unit_deployment = global.unit_deployment or data
+  check_update_map_settings()
   unit_deployment.on_event = handler(events)
 end
 
 unit_deployment.on_load = function()
   data = global.unit_deployment
   unit_deployment.on_event = handler(events)
+end
+
+unit_deployment.on_configuration_changed = function()
+  check_update_map_settings()
+  check_update_pop_cap()
 end
 
 return unit_deployment
