@@ -33,7 +33,8 @@ for k, deployer in pairs (names) do
   spawner_map[deployer] = true
 end
 
-local direction_enum = {
+local direction_enum =
+{
   [defines.direction.north] = {0, -2},
   [defines.direction.south] = {0, 2},
   [defines.direction.east] = {2, 0},
