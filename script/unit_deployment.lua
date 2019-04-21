@@ -103,31 +103,28 @@ local check_spawner = function(spawner_data)
     return
   end
 
-  local surface = entity.surface
   local force = entity.force
-  local position = entity.position
-  local item_production_statistics = force.item_production_statistics
-
-  local recipe_name = recipe.name
-
-  local prototype = get_prototype(recipe_name)
-  local pollution = surface.get_pollution(position)
 
   if can_spawn_units(force.index) then
+    local recipe_name = recipe.name
     local item_count = entity.get_item_count(recipe_name)
     if item_count > 0 then
-      local count = deploy_unit(entity, prototype)
+      deploy_unit(entity, get_prototype(recipe_name))
       entity.remove_item{name = recipe_name, count = 1}
     end
   end
+
+  local surface = entity.surface
+  local position = entity.position
 
   local current_energy = entity.crafting_progress
 
   if current_energy < 1 then
 
+    local pollution = surface.get_pollution(position)
     local pollution_to_take = pollution * pollution_percent_to_take
     if pollution_percent_to_take < min_to_take then
-      pollution_percent_to_take = min(min_to_take, pollution)
+      pollution_to_take = min(min_to_take, pollution)
     end
 
     local energy = recipe.energy
