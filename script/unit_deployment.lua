@@ -47,8 +47,6 @@ local deploy_unit = function(source, prototype)
   local name = prototype.name
   local deploy_bounding_box = prototype.collision_box
   local bounding_box = source.bounding_box
-  --local offset_x = offset[1] * ((bounding_box.right_bottom.x - bounding_box.left_top.x) / 2) + ((deploy_bounding_box.right_bottom.x - deploy_bounding_box.left_top.x) / 2)
-  --local offset_y = offset[2] * ((bounding_box.right_bottom.y - bounding_box.left_top.y) / 2) + ((deploy_bounding_box.right_bottom.y - deploy_bounding_box.left_top.y) / 2)
   local position = {source.position.x + offset[1], source.position.y + offset[2]}
   local surface = source.surface
   local force = source.force
@@ -85,6 +83,7 @@ local get_prototype = function(name)
   prototype_cache[name] = prototype
   return prototype
 end
+
 local min = math.min
 
 local progress_color = {r = 0.8, g = 0.8}
@@ -323,7 +322,7 @@ local check_ghost = function(ghost_data)
       --target_offset = {0, 1},
       color = progress_color,
       alignment = "center",
-      forces = {force},
+      forces = {entity.force},
       scale = 3
     }
     ghost_data.progress = progress
