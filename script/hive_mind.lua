@@ -150,7 +150,7 @@ local get_hive_entities = function(entity)
   local map = {}
   local surface = entity.surface
   local find = surface.find_entities_filtered
-  local params = {force = "enemy"}
+  local params = {force = "enemy", type = {"turret", "unit", "unit-spawner"}}
   local radius = 12
   --local count = 1
   local function recursive_find_neighbors(entity)
@@ -311,7 +311,7 @@ local check_hivemind_disband = function()
     ["entity-ghost"] = true
   }
 
-  local params = {force = force}
+  local params = {force = force, type = {"turret", "unit", "unit-spawner", "entity-ghost", "radar", "assembling-machine"}}
   local enemy_force = game.forces.enemy
   for surface_index, surface in pairs(game.surfaces) do
     for k, entity in pairs (surface.find_entities_filtered(params)) do
