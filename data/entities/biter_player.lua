@@ -59,8 +59,8 @@ local make_biter_player = function(name, graphics)
   player.drop_item_distance = 100
   player.reach_distance = 100
   player.reach_resource_distance = 100
-  player.item_pickup_distance = 100
-  player.loot_pickup_distance = 100
+  player.item_pickup_distance = 0
+  player.loot_pickup_distance = 0
   player.enter_vehicle_distance = 0
 
   player.collision_box = graphics.collision_box
