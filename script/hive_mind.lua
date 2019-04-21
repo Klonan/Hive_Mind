@@ -551,6 +551,17 @@ local set_map_settings = function()
   game.map_settings.pollution.min_to_show_per_chunk = 100
 end
 
+local on_gui_opened = function(event)
+  if event.gui_type ~= defines.gui_type.entity then return end
+  local player = game.get_player(event.player_index)
+  if not is_hivemind_force(player.force) then return end
+  local entity = event.entity
+  if not (entity and entity.valid) then return end
+  if entity.type ~= "assembling-machine" then
+    player.opened = nil
+  end
+end
+
 local events =
 {
   [defines.events.on_player_respawned] = on_player_respawned,
@@ -565,8 +576,22 @@ local events =
   [defines.events.on_player_gun_inventory_changed] = on_player_gun_inventory_changed,
   [defines.events.on_player_ammo_inventory_changed] = on_player_ammo_inventory_changed,
   [defines.events.on_player_armor_inventory_changed] = on_player_armor_inventory_changed,
+  [defines.events.on_gui_opened] = on_gui_opened
 
 }
+
+local on_wave_defense_round_started = function(event)
+  local enemy_force = game.forces.enemy
+  be_friends(enemy_force, get_hivemind_force())
+  enemy_force.share_chart = true
+  set_map_settings()
+end
+
+local register_wave_defense = function()
+  if not remote.interfaces["wave_defense"] then return end
+  local wave_defense_events = remote.call("wave_defense", "get_events")
+  events[wave_defense_events.on_round_started] = on_wave_defense_round_started
+end
 
 local lib = {}
 
@@ -574,16 +599,16 @@ lib.get_events = function() return events end
 
 lib.on_init = function()
   global.hive_mind = global.hive_mind or script_data
-  lib.on_event = handler(events)
   for k, player in pairs (game.players) do
     gui_init(player)
   end
   set_map_settings()
+  register_wave_defense()
 end
 
 lib.on_load = function()
   script_data = global.hive_mind or script_data
-  lib.on_event = handler(events)
+  register_wave_defense()
 end
 
 lib.on_configuration_changed = function()

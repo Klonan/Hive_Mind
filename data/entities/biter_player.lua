@@ -55,6 +55,14 @@ local make_biter_player = function(name, graphics)
   player.distance_per_frame = graphics.distance_per_frame
   player.crafting_categories = nil
 
+  player.build_distance = 100
+  player.drop_item_distance = 100
+  player.reach_distance = 100
+  player.reach_resource_distance = 100
+  player.item_pickup_distance = 100
+  player.loot_pickup_distance = 100
+  player.enter_vehicle_distance = 0
+
   player.collision_box = graphics.collision_box
   player.selection_box = graphics.selection_box
   player.inventory_size = 0

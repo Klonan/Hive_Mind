@@ -10,18 +10,6 @@ local libs = {
   hive_mind = require("script/hive_mind"),
 }
 
---libs.debug.libs = libs
-
-local on_event = function(event)
-  --local tick = game.tick
-  --log(tick.. " | Control on_event triggered")s
-  for name, lib in pairs (libs) do
-    if lib.on_event then
-      --log(tick.. " | Running on_Event for lib "..name)
-      lib.on_event(event)
-    end
-  end
-end
 
 local register_events = function(libraries)
 

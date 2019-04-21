@@ -31,6 +31,19 @@ machine.corpse = graphics.corpse
 machine.dying_explosion = graphics.dying_explosion
 machine.minable = nil
 
+machine.open_sound =
+{
+  {filename = "__base__/sound/creatures/worm-standup-small-1.ogg"},
+  {filename = "__base__/sound/creatures/worm-standup-small-2.ogg"},
+  {filename = "__base__/sound/creatures/worm-standup-small-3.ogg"},
+}
+machine.close_sound =
+{
+  {filename = "__base__/sound/creatures/worm-folding-1.ogg"},
+  {filename = "__base__/sound/creatures/worm-folding-2.ogg"},
+  {filename = "__base__/sound/creatures/worm-folding-3.ogg"},
+}
+
 machine.always_draw_idle_animation = true
 machine.animation =
 {

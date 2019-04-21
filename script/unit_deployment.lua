@@ -536,12 +536,10 @@ unit_deployment.on_init = function()
   global.unit_deployment = global.unit_deployment or data
   check_update_map_settings()
   check_update_pop_cap()
-  unit_deployment.on_event = handler(events)
 end
 
 unit_deployment.on_load = function()
   data = global.unit_deployment
-  unit_deployment.on_event = handler(events)
 end
 
 unit_deployment.on_configuration_changed = function()
