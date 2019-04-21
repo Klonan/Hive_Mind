@@ -97,7 +97,7 @@ local check_spawner = function(spawner_data)
   local recipe = entity.get_recipe()
   if not recipe then
     if spawner_data.progress and rendering.is_valid(spawner_data.progress) then
-      rendering.destroy(spawner_data.background)
+      rendering.destroy(spawner_data.progress)
       spawner_data.progress = nil
     end
     return
