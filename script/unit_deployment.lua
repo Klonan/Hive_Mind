@@ -123,7 +123,7 @@ local check_spawner = function(spawner_data)
 
     local pollution = surface.get_pollution(position)
     local pollution_to_take = pollution * pollution_percent_to_take
-    if pollution_percent_to_take < min_to_take then
+    if pollution_to_take < min_to_take then
       pollution_to_take = min(min_to_take, pollution)
     end
 
