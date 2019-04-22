@@ -1,6 +1,6 @@
 local util = require("data/tf_util/tf_util")
 local name = names.creep
-local creep_color = {r = 1, b = 0.6, g = 0.1}
+local creep_color = {r = 0.5, b = 0.5, g = 0}
 local creep = util.copy(data.raw.tile["sand-1"])
 creep.name = name
 creep.localised_name = name
@@ -25,3 +25,23 @@ data:extend
 {
   creep
 }
+
+for k, v in pairs (data.raw.cliff) do
+  v.collision_mask = {"player-layer", "train-layer"}
+end
+
+for k, v in pairs (data.raw.tree) do
+  v.collision_mask = {"player-layer", "train-layer"}
+end
+
+for k, v in pairs (data.raw["simple-entity"]) do
+  if v.count_as_rock_for_filtered_deconstruction then
+    v.collision_mask = {"player-layer", "train-layer"}
+  end
+end
+
+for k, v in pairs (data.raw.item) do
+  if v.place_as_tile then
+    table.insert(v.place_as_tile.condition, "item-layer")
+  end
+end

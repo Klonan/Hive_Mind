@@ -248,15 +248,10 @@ local gui_init = function(player)
 end
 
 
-local biter_quickbar =
-{
-  names.deployers.biter_deployer,
-  names.deployers.spitter_deployer,
-  "small-worm-turret",
-  "medium-worm-turret",
-  "big-worm-turret",
-  "behemoth-worm-turret"
-}
+local biter_quickbar ={}
+for name, pollution in pairs (names.required_pollution) do
+  table.insert(biter_quickbar, name)
+end
 
 join_hive = function(player)
   local force = get_hivemind_force()
