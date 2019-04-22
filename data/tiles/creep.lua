@@ -16,7 +16,7 @@ for k = 1, 8 do
   table.insert(creep.walking_sound, {filename = util.path("data/tiles/creep-0"..k..".ogg")})
 end
 creep.walking_speed_modifier = 1.6
-creep.autoplace = data.raw["unit-spawner"]["biter-spawner"].autoplace
+creep.autoplace = nil --data.raw["unit-spawner"]["biter-spawner"].autoplace
 creep.needs_correction = false
 
 

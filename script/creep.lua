@@ -21,8 +21,20 @@ local creep_spread_names =
 {
   ["biter-deployer"] = true,
   ["spitter-deployer"] = true,
+  ["biter-spawner"] = true,
+  ["spitter-spawner"] = true,
   ["creep-tumor"] = true
 }
+
+local shuffle_table = function(table)
+  local size = #table
+  local random = math.random
+  for k = size, 1, -1 do
+    local i = random(size)
+    table[i], table[k] = table[k], table[i]
+  end
+  return table
+end
 
 local on_built_entity = function(event)
 
@@ -53,7 +65,7 @@ local on_tick = function(event)
         local surface = spawner.surface
         local position = spawner.position
         while true do
-          for k, tile in pairs (surface.find_tiles_filtered{area = get_area(position, spawner_data.radius), collision_mask = "ground-tile"}) do
+          for k, tile in pairs (shuffle_table(surface.find_tiles_filtered{area = get_area(position, spawner_data.radius), collision_mask = "ground-tile"})) do
             local tile_position = tile.position
             if distance(tile_position, position) <= spawner_data.radius then
               surface.set_tiles{{position = tile_position, name = "creep"}}
