@@ -20,6 +20,7 @@ data.pollution_proxy = "pollution-proxy"
 
 data.firestarter_gun = "firestarter-gun"
 data.firestarter_ammo = "firestarter-ammo"
+data.creep = "creep"
 
 data.required_pollution =
 {

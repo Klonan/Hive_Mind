@@ -61,6 +61,13 @@ util.radius = function(area)
   return util.distance(area.right_bottom or area[1], area.left_top or area[2]) / 2
 end
 
+
+util.area = function(position, radius)
+  local x = position[1] or position.x
+  local y = position[2] or position.y
+  return {{x - radius, y - radius}, {x + radius, y + radius}}
+end
+
 util.clear_item = function(entity, item_name)
   if not (entity and entity.valid and item_name) then return end
   entity.remove_item{name = item_name, count = entity.get_item_count(item_name)}

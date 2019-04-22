@@ -28,6 +28,7 @@ machine.next_upgrade = nil
 machine.dying_sound = graphics.dying_sound
 machine.corpse = graphics.corpse
 machine.dying_explosion = graphics.dying_explosion
+machine.collision_mask = util.buildable_on_creep_collision_mask()
 
 machine.open_sound =
 {
@@ -135,7 +136,8 @@ radar.icon_size = machine.icon_size
 radar.max_health = machine.max_health
 radar.corpse = nil
 radar.order = name.."-radar"
-radar.flags =  {"placeable-off-grid", "placeable-neutral", "player-creation", "no-automated-item-removal", "not-blueprintable"}
+radar.flags =  {"placeable-off-grid", "placeable-neutral", "player-creation", "no-automated-item-removal", "not-blueprintable", "hidden"}
+radar.collision_mask = {}
 
 --only needed to make deconstruction work...
 local radar_item = {
