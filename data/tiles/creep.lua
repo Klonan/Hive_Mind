@@ -1,6 +1,6 @@
 local util = require("data/tf_util/tf_util")
 local name = names.creep
-local creep_color = {r = 0.5, b = 0.5, g = 0}
+local creep_color = {r = 0.3, b = 0.3, g = 0.15}
 local creep = util.copy(data.raw.tile["sand-1"])
 creep.name = name
 creep.localised_name = name

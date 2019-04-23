@@ -108,6 +108,7 @@ local unspread_creep = function(creep_data)
   --We want to kill one tile every update.
 
   local surface = landmine.surface
+  surface.create_entity{name = "flying-text", position = landmine.position, text = creep_data.radius}
   local tiles = creep_data.tiles
   if not tiles then
     local radius = creep_data.radius
@@ -117,42 +118,42 @@ local unspread_creep = function(creep_data)
       game.print("HHRUAHA")
       return true
     end
+    radius = radius - 0.5
     local position = landmine.position
-    tiles = shuffle_table(surface.find_tiles_filtered{area = get_area(position, max_radius), name = names.creep})
+    tiles = shuffle_table(surface.find_tiles_filtered{area = get_area(position, radius + 1.5), name = names.creep})
     for k, tile in pairs (tiles) do
       local tile_position = tile.position
       local tile_distance = distance(tile_position, position)
-      if tile_distance > max_radius then
+      if tile_distance > radius + 1.5 then
         tiles[k] = nil
       elseif tile_distance < radius then
         tiles[k] = nil
       end
     end
-    radius = radius - 0.5
     creep_data.radius = radius
     creep_data.tiles = tiles
     game.print(radius)
   end
 
-  local nearby_creep_spread_entities = surface.find_entities_filtered{name = creep_spread_list, area = get_area(landmine.position, max_radius * 2)}
-  local any = #nearby_creep_spread_entities > 0
+  local nearby_retreating_landmines = surface.find_entities_filtered{name = names.creep_landmine, area = get_area(landmine.position, max_radius * 2)}
+  local nearby_spreading_landmines = {}
+  local any_spreading = false
+  for k, v in pairs (nearby_retreating_landmines) do
+    if not script_data.active_creep_landmines[v.unit_number] then
+      nearby_spreading_landmines[k] = v
+      any_spreading = true
+      nearby_retreating_landmines[k] = nil
+    end
+  end
   local get_closest = surface.get_closest
 
   local creep_to_remove
 
   for k, tile in pairs (tiles) do
-    if not any then
-      creep_to_remove = tile
-      tiles[k] = nil
-      break
-    end
+    tiles[k] = nil
     local position = tile.position
-    local closest = get_closest(position, nearby_creep_spread_entities)
-    if distance(position, closest.position) <= (max_radius - 0.5) then
-      tiles[k] = nil
-    else
+    if get_closest(position, nearby_retreating_landmines) == landmine and (not any_spreading or distance(position, get_closest(position, nearby_spreading_landmines).position) > max_radius) then
       creep_to_remove = tile
-      tiles[k] = nil
       break
     end
   end
@@ -170,11 +171,11 @@ end
 
 local check_creep_unspread = function(event)
 
-  local mod = event.tick % creep_unspread_update_rate
+  local tick = event.tick
   for unit_number, creep_data in pairs (script_data.active_creep_landmines) do
-    if unit_number % creep_unspread_update_rate == mod then
+    if (unit_number + tick) % creep_unspread_update_rate == 0 then
       if unspread_creep(creep_data) then
-        script_data.active_creep_landmines[unit_number] = nil
+        --script_data.active_creep_landmines[unit_number] = nil
       end
     end
   end

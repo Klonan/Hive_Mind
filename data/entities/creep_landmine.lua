@@ -21,6 +21,7 @@ local landmine =
   collision_box = nil,
   selection_box = nil,
   selectable_in_game = false,
+  collision_mask = {},
   timeout = 0,
   --dying_explosion = "explosion-hit",
   picture_safe = util.empty_sprite(),
