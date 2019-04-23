@@ -107,10 +107,33 @@ local unspread_creep = function(creep_data)
   --tiles are shuffled when we create find them.
   --We want to kill one tile every update.
 
-  local tiles = creep_data.tiles
-  if not tiles then return --[[??]] true end
-
   local surface = landmine.surface
+  local tiles = creep_data.tiles
+  if not tiles then
+    local radius = creep_data.radius
+    if radius <= 0 then
+      landmine.destructible = true
+      landmine.destroy()
+      game.print("HHRUAHA")
+      return true
+    end
+    local position = landmine.position
+    tiles = shuffle_table(surface.find_tiles_filtered{area = get_area(position, max_radius), name = names.creep})
+    for k, tile in pairs (tiles) do
+      local tile_position = tile.position
+      local tile_distance = distance(tile_position, position)
+      if tile_distance > max_radius then
+        tiles[k] = nil
+      elseif tile_distance < radius then
+        tiles[k] = nil
+      end
+    end
+    radius = radius - 0.5
+    creep_data.radius = radius
+    creep_data.tiles = tiles
+    game.print(radius)
+  end
+
   local nearby_creep_spread_entities = surface.find_entities_filtered{name = creep_spread_list, area = get_area(landmine.position, max_radius * 2)}
   local any = #nearby_creep_spread_entities > 0
   local get_closest = surface.get_closest
@@ -134,17 +157,13 @@ local unspread_creep = function(creep_data)
     end
   end
 
+  if table_size(tiles) == 0 then creep_data.tiles = nil end
+
   if creep_to_remove then
     surface.set_tiles
     {
       {position = creep_to_remove.position, name = creep_to_remove.hidden_tile or "grass-1"}
     }
-  else
-    --no more tiles to check, time to an hero
-    --game.print("No more to remove, so kill this check for this specific landmine")
-    landmine.destructible = true
-    landmine.destroy()
-    return true
   end
 
 end
@@ -186,22 +205,7 @@ local on_entity_died = function(event)
   local creep_landmine = script_data.creep_landmines[unit_number]
   if not (creep_landmine and creep_landmine.valid) then return end
   script_data.creep_landmines[unit_number] = nil
-
-  local surface = creep_landmine.surface
-  local position = creep_landmine.position
-  local tiles = shuffle_table(surface.find_tiles_filtered{area = get_area(position, max_radius), name = names.creep})
-  --filter out the far away ones and those with nearby creep spread entities.
-
-
-  for k, tile in pairs (tiles) do
-    local tile_position = tile.position
-    if distance(tile_position, position) > max_radius then
-      tiles[k] = nil
-    end
-  end
-  --game.print(serpent.block(tiles))
-
-  script_data.active_creep_landmines[creep_landmine.unit_number] = {entity = creep_landmine, tiles = tiles}
+  script_data.active_creep_landmines[creep_landmine.unit_number] = {entity = creep_landmine, radius = max_radius}
 
 end
 
