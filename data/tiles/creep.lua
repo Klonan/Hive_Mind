@@ -9,7 +9,7 @@ creep.collision_mask = util.creep_collision_mask()
 --util.recursive_hack_tint(creep, creep_color)
 creep.tint = creep_color
 creep.map_color = creep_color
---creep.allowed_neighbors = nil
+--creep.allowed_neighbors = {}
 creep.pollution_absorption_per_second = 0
 creep.walking_sound = {}
 for k = 1, 8 do
@@ -18,6 +18,8 @@ end
 creep.walking_speed_modifier = 1.6
 creep.autoplace = nil --data.raw["unit-spawner"]["biter-spawner"].autoplace
 creep.needs_correction = false
+creep.layer = 10
+--error(serpent.block(creep))
 
 
 

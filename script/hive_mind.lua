@@ -311,7 +311,7 @@ local check_hivemind_disband = function()
   for surface_index, surface in pairs(game.surfaces) do
     for k, entity in pairs (surface.find_entities_filtered(params)) do
       if map[entity.name] then
-        surface.create_entity{name = map[entity.name], position = entity.position, force = entity.force}
+        surface.create_entity{name = map[entity.name], position = entity.position, force = entity.force, raise_built = true}
         entity.destroy()
       elseif destroy_map_type[entity.type] then
         entity.destroy()

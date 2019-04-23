@@ -23,7 +23,7 @@ data.firestarter_ammo = "firestarter-ammo"
 
 data.creep = "creep"
 data.creep_tumor = "creep-tumor"
-data.creep_radius = 16
+data.creep_radius = 16.5
 data.creep_sticker = "creep-sticker"
 data.creep_landmine = "creep-landmine"
 
