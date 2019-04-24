@@ -198,7 +198,7 @@ convert_nest = function(player)
     local deploy_name = deploy_map[nearby.name]
     if deploy_name then
       surface.create_entity{name = deploy_name, position = nearby.position, force = force, direction = (math.random(4) - 1) * 2, raise_built = true}
-      nearby.destroy()
+      nearby.destroy({raise_destroy = true})
     elseif nearby.type == "unit" or nearby.type == "turret" then
       nearby.force = force
     end

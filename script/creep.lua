@@ -248,6 +248,7 @@ local events =
   [defines.events.on_biter_base_built] = on_built_entity,
   [defines.events.on_tick] = on_tick,
   [defines.events.on_trigger_created_entity] = on_trigger_created_entity,
+  [defines.events.script_raised_destroy] = on_entity_died,
   [defines.events.on_entity_died] = on_entity_died
 
 }
