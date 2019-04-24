@@ -3,7 +3,7 @@ local name = names.creep
 local creep_color = {r = 0.3, b = 0.3, g = 0.15}
 local creep = util.copy(data.raw.tile["sand-1"])
 creep.name = name
-creep.localised_name = name
+creep.localised_name = {name}
 creep.collision_mask = util.creep_collision_mask()
 
 --util.recursive_hack_tint(creep, creep_color)
@@ -18,7 +18,8 @@ end
 creep.walking_speed_modifier = 1.6
 creep.autoplace = nil --data.raw["unit-spawner"]["biter-spawner"].autoplace
 creep.needs_correction = false
-creep.layer = 10
+creep.layer = 127
+--creep.allowed_neighbors = {}
 --error(serpent.block(creep))
 
 
@@ -41,6 +42,12 @@ for k, v in pairs (data.raw["simple-entity"]) do
     v.collision_mask = {"player-layer", "train-layer"}
   end
 end
+
+--[[
+for k, v in pairs (data.raw["corpse"]) do
+  v.remove_on_tile_placement = false
+end
+]]
 
 for k, v in pairs (data.raw.item) do
   if v.place_as_tile then

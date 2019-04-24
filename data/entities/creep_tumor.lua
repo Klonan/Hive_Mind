@@ -9,7 +9,7 @@ local entity =
 {
   type = "simple-entity-with-force",
   name = name,
-  localised_name = name,
+  localised_name = {name},
   render_layer = "object",
   --icon = graphics.icon,
   --icon_size = graphics.icon_size,
@@ -26,7 +26,7 @@ local entity =
   minable = nil,
   max_health = 20,
   collision_mask = {"ground-tile", "water-tile"},
-  collision_box = {{-0.35, -0.35}, {0.35, 0.35}},
+  collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
   selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
   animations = graphics.animations,
   friendly_map_color = {r = 0.5, b = 0.5}

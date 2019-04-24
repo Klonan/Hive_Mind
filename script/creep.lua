@@ -50,6 +50,7 @@ end
 local on_built_entity = function(event)
 
   local entity = event.created_entity or event.entity
+  if not (entity and entity.valid) then return end
 
   if creep_spread_map[entity.name] then
     local unit_number = entity.unit_number
@@ -65,37 +66,40 @@ local creep_spread_update_rate = 64
 local get_area = util.area
 local distance = util.distance
 
-local check_creep_spread = function(event)
-  --local mod = event.tick % creep_spread_update_rate
-  local tick = event.tick
-  for unit_number, spawner_data in pairs (script_data.spreading_landmines) do
-    local spawner = spawner_data.entity
-    if spawner.valid then
-      if (unit_number + tick) % creep_spread_update_rate == 0 then
-        local surface = spawner.surface
-        local position = spawner.position
-        while true do
-          for k, tile in pairs (shuffle_table(surface.find_tiles_filtered{area = get_area(position, spawner_data.radius), collision_mask = "ground-tile"})) do
-            local tile_position = tile.position
-            if distance(tile_position, position) <= spawner_data.radius then
-              local hidden = tile.name
-              surface.set_tiles{{position = tile_position, name = "creep"}}
-              surface.set_hidden_tile(tile_position, hidden)
-              return
-            end
-          end
-          if spawner_data.radius < max_radius then
-            spawner_data.radius = spawner_data.radius + 0.5
-          else
-            script_data.idle_landmines[unit_number] = spawner_data
-            script_data.spreading_landmines[unit_number] = nil
-            return
-          end
+local spread_creep = function(unit_number, spawner_data)
+  local spawner = spawner_data.entity
+  if spawner.valid then
+    local surface = spawner.surface
+    local position = spawner.position
+    while true do
+      for k, tile in pairs (shuffle_table(surface.find_tiles_filtered{area = get_area(position, spawner_data.radius), collision_mask = "ground-tile"})) do
+        local tile_position = tile.position
+        if distance(tile_position, position) <= spawner_data.radius then
+          local hidden = tile.name
+          surface.set_tiles{{position = tile_position, name = "creep"}}
+          surface.set_hidden_tile(tile_position, hidden)
+          return
         end
       end
-    else
-      script_data.idle_landmines[unit_number] = spawner_data
-      script_data.spreading_landmines[unit_number] = nil
+      if spawner_data.radius < max_radius then
+        spawner_data.radius = spawner_data.radius + 0.5
+      else
+        script_data.idle_landmines[unit_number] = spawner_data
+        script_data.spreading_landmines[unit_number] = nil
+        return
+      end
+    end
+  else
+    script_data.spreading_landmines[unit_number] = nil
+  end
+
+end
+
+local check_creep_spread = function(event)
+  local mod = event.tick % creep_spread_update_rate
+  for unit_number, spawner_data in pairs (script_data.spreading_landmines) do
+    if (unit_number % creep_spread_update_rate) == mod then
+      spread_creep(unit_number, spawner_data)
     end
   end
 end
@@ -104,7 +108,7 @@ local creep_unspread_update_rate = 64
 
 local unspread_creep = function(landmine_data)
   local landmine = landmine_data.entity
-  if not (landmine and landmine.valid) then return end
+  if not (landmine and landmine.valid) then return true end
 
   --tiles are shuffled when we create find them.
   --We want to kill one tile every update.
@@ -190,9 +194,9 @@ end
 
 local check_creep_unspread = function(event)
 
-  local tick = event.tick
+  local mod = event.tick % creep_unspread_update_rate
   for unit_number, landmine_data in pairs (script_data.shrinking_landmines) do
-    if (unit_number + tick) % creep_unspread_update_rate == 0 then
+    if (unit_number % creep_unspread_update_rate) == mod then
       if unspread_creep(landmine_data) then
         script_data.shrinking_landmines[unit_number] = nil
       end
@@ -241,6 +245,7 @@ local events =
   [defines.events.script_raised_revive] = on_built_entity,
   [defines.events.script_raised_built] = on_built_entity,
   [defines.events.on_built_entity] = on_built_entity,
+  [defines.events.on_biter_base_built] = on_built_entity,
   [defines.events.on_tick] = on_tick,
   [defines.events.on_trigger_created_entity] = on_trigger_created_entity,
   [defines.events.on_entity_died] = on_entity_died
@@ -253,6 +258,11 @@ lib.get_events = function() return events end
 
 lib.on_init = function()
   global.creep = global.creep or script_data
+  for k, surface in pairs (game.surfaces) do
+    for k, v in pairs (surface.find_entities_filtered{name = creep_spread_list}) do
+      on_built_entity({entity = v})
+    end
+  end
 end
 
 lib.on_load = function()

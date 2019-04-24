@@ -92,7 +92,7 @@ local make_worm = function(turret)
   turret.create_ghost_on_death = false
   turret.friendly_map_color = {b = 1, g = 0.5}
   turret.localised_description = {"requires-pollution", shared.required_pollution[name]}
-  turret.collision_mask = util.buildable_on_creep_collision_mask()
+  turret.collision_mask = {"water-tile", "player-layer", "train-layer"}
 end
 
 

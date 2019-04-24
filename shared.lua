@@ -23,7 +23,7 @@ data.firestarter_ammo = "firestarter-ammo"
 
 data.creep = "creep"
 data.creep_tumor = "creep-tumor"
-data.creep_radius = 16.5
+data.creep_radius = 10
 data.creep_sticker = "creep-sticker"
 data.creep_landmine = "creep-landmine"
 
@@ -36,6 +36,14 @@ data.required_pollution =
   ["medium-worm-turret"] = 150,
   ["big-worm-turret"] = 400,
   ["behemoth-worm-turret"] = 1000
+}
+
+data.needs_creep =
+{
+  ["small-worm-turret"] =true,
+  ["medium-worm-turret"] = true,
+  ["big-worm-turret"] = true,
+  ["behemoth-worm-turret"] = true
 }
 
 return data

@@ -254,12 +254,37 @@ local get_sacrifice_radius = function()
   return 24
 end
 
+local needs_creep = shared.needs_creep
+local creep_name = shared.creep
 
 local check_ghost = function(ghost_data)
   local entity = ghost_data.entity
   if not (entity and entity.valid) then return true end
   local surface = entity.surface
   --entity.surface.create_entity{name = "flying-text", position = entity.position, text = ghost_data.required_pollution}
+
+  if needs_creep[entity.ghost_name] then
+    if surface.get_tile(entity.position).name ~= creep_name then
+      if not (ghost_data.creep_notice and rendering.is_valid(ghost_data.creep_notice)) then
+        ghost_data.creep_notice = rendering.draw_text
+        {
+          text = {"needs-creep"},
+          surface = surface,
+          target = entity,
+          --target_offset = {0, 1},
+          color = {r = 0.5, b = 0.5},
+          alignment = "center",
+          forces = {entity.force},
+          scale = 2
+        }
+      end
+      return
+    else
+      if ghost_data.creep_notice and rendering.is_valid(ghost_data.creep_notice) then
+        rendering.destroy(ghost_data.creep_notice)
+      end
+    end
+  end
 
   if ghost_data.required_pollution > 0 then
     for k, unit in pairs (surface.find_units{area = entity.bounding_box, force = entity.force, condition = "same"}) do
