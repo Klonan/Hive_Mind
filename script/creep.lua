@@ -2,9 +2,9 @@ local util = require("script/script_util")
 
 local script_data =
 {
-  active_creep_spread_entities = {},
-  creep_landmines = {},
-  active_creep_landmines = {}
+  spreading_landmines = {},
+  idle_landmines = {},
+  shrinking_landmines = {}
 }
 
 local names = require("shared")
@@ -15,10 +15,11 @@ local on_chunk_generated = function(event)
   local surface = event.surface
   for k, entity in pairs (surface.find_entities_filtered{type = "unit-spawner", area = area}) do
     local unit_number = entity.unit_number
-    script_data.active_creep_spread_entities[unit_number] = {entity = entity, radius = 1}
-    local landmine = entity.surface.create_entity{name = names.creep_landmine, position = entity.position, force = entity.force}
-    landmine.destructible = false
-    script_data.creep_landmines[unit_number] = landmine
+    if not script_data.spreading_landmines[unit_number] then
+      local landmine = entity.surface.create_entity{name = names.creep_landmine, position = entity.position, force = entity.force}
+      landmine.destructible = false
+      script_data.spreading_landmines[unit_number] = {entity = landmine, radius = 1}
+    end
   end
 end
 
@@ -52,10 +53,9 @@ local on_built_entity = function(event)
 
   if creep_spread_map[entity.name] then
     local unit_number = entity.unit_number
-    script_data.active_creep_spread_entities[unit_number] = {entity = entity, radius = 1}
     local landmine = entity.surface.create_entity{name = names.creep_landmine, position = entity.position, force = entity.force}
     landmine.destructible = false
-    script_data.creep_landmines[unit_number] = landmine
+    script_data.spreading_landmines[unit_number] = {entity = landmine, radius = 1}
   end
 
 end
@@ -68,7 +68,7 @@ local distance = util.distance
 local check_creep_spread = function(event)
   --local mod = event.tick % creep_spread_update_rate
   local tick = event.tick
-  for unit_number, spawner_data in pairs (script_data.active_creep_spread_entities) do
+  for unit_number, spawner_data in pairs (script_data.spreading_landmines) do
     local spawner = spawner_data.entity
     if spawner.valid then
       if (unit_number + tick) % creep_spread_update_rate == 0 then
@@ -87,32 +87,35 @@ local check_creep_spread = function(event)
           if spawner_data.radius < max_radius then
             spawner_data.radius = spawner_data.radius + 0.5
           else
-            script_data.active_creep_spread_entities[unit_number] = nil
+            script_data.idle_landmines[unit_number] = spawner_data
+            script_data.spreading_landmines[unit_number] = nil
             return
           end
         end
       end
     else
-      script_data.active_creep_spread_entities[unit_number] = nil
+      script_data.idle_landmines[unit_number] = spawner_data
+      script_data.spreading_landmines[unit_number] = nil
     end
   end
 end
 
 local creep_unspread_update_rate = 64
 
-local unspread_creep = function(creep_data)
-  local landmine = creep_data.entity
+local unspread_creep = function(landmine_data)
+  local landmine = landmine_data.entity
   if not (landmine and landmine.valid) then return end
 
   --tiles are shuffled when we create find them.
   --We want to kill one tile every update.
 
   local surface = landmine.surface
-  surface.create_entity{name = "flying-text", position = landmine.position, text = creep_data.radius}
-  local tiles = creep_data.tiles
+  --surface.create_entity{name = "flying-text", position = landmine.position, text = landmine_data.radius}
+  local tiles = landmine_data.tiles
   if not tiles then
-    local radius = creep_data.radius
+    local radius = landmine_data.radius
     if radius <= 0 then
+      --surface.create_entity{name = "massive-explosion", position = landmine.position}
       landmine.destructible = true
       landmine.destroy()
       game.print("HHRUAHA")
@@ -130,21 +133,37 @@ local unspread_creep = function(creep_data)
         tiles[k] = nil
       end
     end
-    creep_data.radius = radius
-    creep_data.tiles = tiles
-    game.print(radius)
+    --surface.create_entity{name = "flying-text", position = landmine.position, text = "Found new tiles"}
+    --game.print(landmine.unit_number)
+    --game.print(serpent.block{tiles})
+    landmine_data.radius = radius
+    landmine_data.tiles = tiles
+    --game.print(radius)
   end
 
-  local nearby_retreating_landmines = surface.find_entities_filtered{name = names.creep_landmine, area = get_area(landmine.position, max_radius * 2)}
-  local nearby_spreading_landmines = {}
-  local any_spreading = false
-  for k, v in pairs (nearby_retreating_landmines) do
-    if not script_data.active_creep_landmines[v.unit_number] then
-      nearby_spreading_landmines[k] = v
-      any_spreading = true
-      nearby_retreating_landmines[k] = nil
+  local nearby_shrinking_landmines = surface.find_entities_filtered{name = names.creep_landmine, area = get_area(landmine.position, max_radius * 2)}
+  local nearby_active_landmines = {}
+  local any_active = false
+  for k, v in pairs (nearby_shrinking_landmines) do
+    if not script_data.shrinking_landmines[v.unit_number] then
+      nearby_active_landmines[k] = v
+      any_active = true
+      nearby_shrinking_landmines[k] = nil
     end
   end
+  local present = false
+  for k, v in pairs (nearby_shrinking_landmines) do
+    if v == landmine then
+      present = true
+    end
+  end
+  --game.print(serpent.block
+  --{
+  --  unit_number = landmine.unit_number,
+  --  any_active = any_active,
+  --  present = present,
+  --  tile_count = table_size(tiles)
+  --})
   local get_closest = surface.get_closest
 
   local creep_to_remove
@@ -152,13 +171,13 @@ local unspread_creep = function(creep_data)
   for k, tile in pairs (tiles) do
     tiles[k] = nil
     local position = tile.position
-    if get_closest(position, nearby_retreating_landmines) == landmine and (not any_spreading or distance(position, get_closest(position, nearby_spreading_landmines).position) > max_radius) then
+    if get_closest(position, nearby_shrinking_landmines) == landmine and (not any_active or distance(position, get_closest(position, nearby_active_landmines).position) > max_radius) then
       creep_to_remove = tile
       break
     end
   end
 
-  if table_size(tiles) == 0 then creep_data.tiles = nil end
+  if table_size(tiles) == 0 then landmine_data.tiles = nil end
 
   if creep_to_remove then
     surface.set_tiles
@@ -172,10 +191,10 @@ end
 local check_creep_unspread = function(event)
 
   local tick = event.tick
-  for unit_number, creep_data in pairs (script_data.active_creep_landmines) do
+  for unit_number, landmine_data in pairs (script_data.shrinking_landmines) do
     if (unit_number + tick) % creep_unspread_update_rate == 0 then
-      if unspread_creep(creep_data) then
-        --script_data.active_creep_landmines[unit_number] = nil
+      if unspread_creep(landmine_data) then
+        script_data.shrinking_landmines[unit_number] = nil
       end
     end
   end
@@ -203,10 +222,16 @@ local on_entity_died = function(event)
   local entity = event.entity
   if not (entity and entity.valid) then return end
   local unit_number = entity.unit_number
-  local creep_landmine = script_data.creep_landmines[unit_number]
+  local landmine_data = script_data.idle_landmines[unit_number] or script_data.spreading_landmines[unit_number]
+  if not landmine_data then return end
+
+  script_data.idle_landmines[unit_number] = nil
+  script_data.spreading_landmines[unit_number] = nil
+
+  local creep_landmine = landmine_data.entity
   if not (creep_landmine and creep_landmine.valid) then return end
-  script_data.creep_landmines[unit_number] = nil
-  script_data.active_creep_landmines[creep_landmine.unit_number] = {entity = creep_landmine, radius = max_radius}
+  landmine_data.radius = max_radius
+  script_data.shrinking_landmines[creep_landmine.unit_number] = landmine_data
 
 end
 
