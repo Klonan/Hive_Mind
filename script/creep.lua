@@ -285,17 +285,19 @@ local on_entity_died = function(event)
 
   local creep_landmine = landmine_data.entity
   if not (creep_landmine and creep_landmine.valid) then return end
-  landmine_data.radius = max_radius + root_2
-  script_data.shrinking_landmines[creep_landmine.unit_number] = landmine_data
 
+  --We need to notify nearby shrinking ones to reexpand their radius, as they may have already checked the nearby tiles and determined they should be left as creep.
+  
   local nearby_shrinking_landmines = creep_landmine.surface.find_entities_filtered{name = names.creep_landmine, area = get_area(creep_landmine.position, max_radius * 2)}
   for k, v in pairs (nearby_shrinking_landmines) do
     local nearby_data = script_data.shrinking_landmines[v.unit_number] 
     if nearby_data then
-      nearby_data.radius = max_radius + root_2
+      nearby_data.radius = max_radius
     end
   end
-
+  
+  landmine_data.radius = max_radius
+  script_data.shrinking_landmines[creep_landmine.unit_number] = landmine_data
 end
 
 local events =
