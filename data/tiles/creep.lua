@@ -19,6 +19,8 @@ creep.walking_speed_modifier = 1.3
 creep.autoplace = nil --data.raw["unit-spawner"]["biter-spawner"].autoplace
 creep.needs_correction = false
 creep.layer = 127
+--This is needed to trick the game into setting the hidden tile for me.
+creep.minable = {mining_time = 2^32, result = "raw-fish", required_fluid = "steam"}
 --creep.allowed_neighbors = {}
 --error(serpent.block(creep))
 
