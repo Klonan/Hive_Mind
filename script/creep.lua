@@ -63,7 +63,7 @@ local on_built_entity = function(event)
 end
 
 local max_radius = names.creep_radius
-local creep_spread_update_rate = 1
+local creep_spread_update_rate = 64
 local get_area = util.area
 local distance = util.distance
 local insert = table.insert
@@ -154,7 +154,7 @@ local check_creep_spread = function(event)
   end
 end
 
-local creep_unspread_update_rate = 1
+local creep_unspread_update_rate = 64
 local unspread_creep
 unspread_creep = function(unit_number, landmine_data)
   local landmine = landmine_data.entity

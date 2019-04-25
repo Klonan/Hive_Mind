@@ -26,6 +26,7 @@ data.creep_tumor = "creep-tumor"
 data.creep_radius = 10
 data.creep_sticker = "creep-sticker"
 data.creep_landmine = "creep-landmine"
+data.pollution_lab = "pollution-lab"
 
 data.required_pollution =
 {
