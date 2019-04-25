@@ -29,6 +29,7 @@ local entity =
   collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
   selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
   animations = graphics.animations,
+  dying_explosion = graphics.dying_explosion,
   friendly_map_color = {r = 0.5, b = 0.5}
 }
 
