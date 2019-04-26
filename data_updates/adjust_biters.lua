@@ -106,7 +106,43 @@ for name, unit in pairs (units) do
   end
 end
 
+--The acid splashes are still OP.
+
+for k, fire in pairs (data.raw.fire) do
+  if fire.name:find("acid%-splash%-fire") then
+    fire.on_damage_tick_effect = nil
+  end
+end
+
 local turrets = data.raw.turret
+
+--Overall, they just have too large a range.
+
+--[[
+range_worm_small    = 25
+range_worm_medium   = 30
+range_worm_big      = 38
+range_worm_behemoth = 48
+]]
+--Laser turret is 24, flamethrower is 30, so lets make behemoth 35 and scale the rest accordingly
+
+turrets["small-worm-turret"].attack_parameters.range = 20
+turrets["medium-worm-turret"].attack_parameters.range = 25
+turrets["big-worm-turret"].attack_parameters.range = 30
+turrets["behemoth-worm-turret"].attack_parameters.range = 35
+
+--Also the damage is ridiculous:
+--[[damage_modifier_worm_small    = 36
+damage_modifier_worm_medium   = 48
+damage_modifier_worm_big      = 72
+damage_modifier_worm_behemoth = 96]]
+
+--lets say behemoth is 60
+
+turrets["small-worm-turret"].attack_parameters.damage_modifier = 15
+turrets["medium-worm-turret"].attack_parameters.damage_modifier = 30
+turrets["big-worm-turret"].attack_parameters.damage_modifier = 45
+turrets["behemoth-worm-turret"].attack_parameters.damage_modifier = 60
 
 for name, turret in pairs (turrets) do
   if turret.name:find("worm%-turret") then

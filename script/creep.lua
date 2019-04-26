@@ -55,9 +55,11 @@ local on_built_entity = function(event)
 
   if creep_spread_map[entity.name] then
     local unit_number = entity.unit_number
-    local landmine = entity.surface.create_entity{name = names.creep_landmine, position = entity.position, force = entity.force}
-    landmine.destructible = false
-    script_data.spreading_landmines[unit_number] = {entity = landmine, radius = 1}
+    if not script_data.spreading_landmines[unit_number] then
+      local landmine = entity.surface.create_entity{name = names.creep_landmine, position = entity.position, force = entity.force}
+      landmine.destructible = false
+      script_data.spreading_landmines[unit_number] = {entity = landmine, radius = 1}
+    end
   end
 
 end
@@ -332,7 +334,13 @@ lib.on_load = function()
 end
 
 lib.on_configuration_changed = function()
-
+  if global.creep then return end
+  global.creep = script_data
+  for k, surface in pairs (game.surfaces) do
+    for k, v in pairs (surface.find_entities_filtered{name = creep_spread_list}) do
+      on_built_entity({entity = v})
+    end
+  end
 end
 
 return lib

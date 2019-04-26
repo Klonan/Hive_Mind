@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.0
+Date: 2019-04-26
+  Changes:
+    - Added Creep and Creep tumors. Deployers, Spawners and Creep tumors will spread creep. It gives a 30% speed boost to friendly units and players.
+    - New worms cannot be built off Creep.
+    - Nerfed worms, especially the acid on ground damage. Also the range and damage.
+    - Factory players can't build on Creep.
+    - Creep will shrink over time if the source is killed.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.11
 Date: 2019-04-21
   Changes:

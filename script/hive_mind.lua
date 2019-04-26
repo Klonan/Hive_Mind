@@ -129,7 +129,14 @@ local create_character = function(player)
     end
   end
   local surface = player.surface
-  local position = surface.find_non_colliding_position(name, script_data.player_spawns[player.index] or {0,0}, 64, 1)
+  local origin = script_data.player_spawns[player.index] or {0,0}
+  local closest = surface.get_closest(origin, surface.find_entities_filtered{force = player.force, type = "assembling-machine"})
+  local position
+  if closest then
+    position = surface.find_non_colliding_position(name, closest.position, 64, 1)
+  else
+    position = surface.find_non_colliding_position(name, origin, 64, 1)
+  end
   if not position then return end
   player.character = surface.create_entity
   {
