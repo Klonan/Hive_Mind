@@ -546,13 +546,19 @@ local set_map_settings = function()
   game.map_settings.pollution.min_to_show_per_chunk = 100
 end
 
+local allowed_gui_types =
+{
+  ["assembling-machine"] = true,
+  ["lab"] = true,
+}
+
 local on_gui_opened = function(event)
   if event.gui_type ~= defines.gui_type.entity then return end
   local player = game.get_player(event.player_index)
   if not is_hivemind_force(player.force) then return end
   local entity = event.entity
   if not (entity and entity.valid) then return end
-  if entity.type ~= "assembling-machine" then
+  if not allowed_gui_types[entity.type] then
     player.opened = nil
   end
 end

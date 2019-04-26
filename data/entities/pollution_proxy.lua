@@ -7,10 +7,11 @@ data:extend
   {
     name = name,
     localised_name = {name},
-    type = "item",
+    type = "tool",
     icon = steam.icon,
     icon_size = steam.icon_size,
     flags = {"hidden"},
-    stack_size = 1
+    stack_size = 1,
+    durability = 1
   }
 }
