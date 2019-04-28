@@ -3,12 +3,7 @@ shared = require("shared")
 
 local util = require("data/tf_util/tf_util")
 
-local default_unlocked =
-{
-  ["small-biter"] = true,
-  ["small-spitter"] = true,
-  ["small-worm-turret"] = true
-}
+local default_unlocked = shared.default_unlocked
 
 local make_biter_item = function(prototype, subgroup)
   local item =

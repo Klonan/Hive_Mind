@@ -3,7 +3,7 @@ local name = names.pollution_lab
 local util = require("data/tf_util/tf_util")
 local graphics = util.copy(data.raw.lab.lab)
 --local animation = graphics.animations[1]
-local lab_scale = 0.5
+local lab_scale = 1
 
 local tint = {r = 0.8, b = 0.8, g = 0.2}
 util.recursive_hack_tint(graphics, tint)
@@ -18,7 +18,7 @@ util.recursive_hack_scale(graphics, lab_scale)
 --end
 
 local spawner_graphics = util.copy(data.raw["unit-spawner"]["biter-spawner"])
-util.recursive_hack_scale(spawner_graphics, 3/5)
+util.recursive_hack_scale(spawner_graphics, 6/5)
 util.recursive_hack_tint(spawner_graphics, tint)
 
 local on_animation = {layers = {}}
@@ -40,7 +40,7 @@ for k, layer in pairs (graphics.on_animation.layers) do
     layer.repeat_count = 16
     layer.hr_version.repeat_count = 16
   end
-  util.shift_layer(layer, {0, -1.1})
+  util.shift_layer(layer, {0, -2.2})
   table.insert(on_animation.layers, layer)
 end
 
@@ -61,13 +61,9 @@ for k, layer in pairs (spawner_graphics.animations[2].layers) do
 end
 
 for k, layer in pairs (graphics.off_animation.layers) do
-  util.shift_layer(layer, {0, -1.1})
+  util.shift_layer(layer, {0, -2.2})
   table.insert(off_animation.layers, layer)
 end
-
-
-
-
 
 local lab =
 {
@@ -85,7 +81,7 @@ local lab =
       icon = graphics.icon,
       icon_size = graphics.icon_size,
       tint = tint,
-      scale = lab_scale,
+      scale = 0.5,
       shift = {0, -8}
     }
   },
@@ -94,10 +90,10 @@ local lab =
   max_health = 150,
   corpse = nil,
   dying_explosion = spawner_graphics.dying_explosion,
-  collision_box = {{-1.2, -1.2}, {1.2, 1.2}},
-  selection_box = {{-1.5, -1.5}, {1.5, 1.5}},
+  collision_box = {{-2.7, -2.7}, {2.7, 2.7}},
+  selection_box = {{-3, -3}, {3, 3}},
   collision_mask = util.buildable_on_creep_collision_mask(),
-  light = {intensity = 0.5, size = 8, color = {r = 0.5, g = 0.5, b = 0}},
+  light = {intensity = 1, size = 20, color = tint},
   on_animation = on_animation,
   off_animation = off_animation,
   working_sound = spawner_graphics.working_sound,
@@ -112,13 +108,6 @@ local lab =
   inputs =
   {
     names.pollution_proxy
-  },
-  old_module_specification =
-  {
-    module_slots = 2,
-    max_entity_info_module_icons_per_row = 3,
-    max_entity_info_module_icon_rows = 1,
-    module_info_icon_shift = {0, 0.9}
   }
 }
 

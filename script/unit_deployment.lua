@@ -254,6 +254,18 @@ local get_sacrifice_radius = function()
   return 24
 end
 
+local needs_technology
+local get_needs_technology = function(name)
+  if needs_technology then return needs_technology[name] end
+  needs_technology = {}
+  for name, entity in pairs(required_pollution) do
+    if game.technology_prototypes["hivemind-unlock-"..name] then
+      needs_technology[name] = true
+    end
+  end
+  return needs_technology[name]
+end
+
 local needs_creep = shared.needs_creep
 local creep_name = shared.creep
 
@@ -262,29 +274,7 @@ local check_ghost = function(ghost_data)
   if not (entity and entity.valid) then return true end
   local surface = entity.surface
   --entity.surface.create_entity{name = "flying-text", position = entity.position, text = ghost_data.required_pollution}
-
-  if needs_creep[entity.ghost_name] then
-    if surface.get_tile(entity.position).name ~= creep_name then
-      if not (ghost_data.creep_notice and rendering.is_valid(ghost_data.creep_notice)) then
-        ghost_data.creep_notice = rendering.draw_text
-        {
-          text = {"needs-creep"},
-          surface = surface,
-          target = entity,
-          --target_offset = {0, 1},
-          color = {r = 0.5, b = 0.5},
-          alignment = "center",
-          forces = {entity.force},
-          scale = 2
-        }
-      end
-      return
-    else
-      if ghost_data.creep_notice and rendering.is_valid(ghost_data.creep_notice) then
-        rendering.destroy(ghost_data.creep_notice)
-      end
-    end
-  end
+  local ghost_name = entity.ghost_name
 
   if ghost_data.required_pollution > 0 then
     for k, unit in pairs (surface.find_units{area = entity.bounding_box, force = entity.force, condition = "same"}) do
@@ -376,7 +366,7 @@ end
 -- So, 59, so that its not exactly 60. Which means over a minute or so, each spawner will 'go first' at the pollution.
 local spawners_update_interval = 59
 
-local spawner_built = function(entity, tick)
+local spawner_built = function(entity)
   local radar_prototype = get_prototype(entity.name.."-radar") or error("Spawner being built does not have a radar proxy prototype "..entity.name)
   local radar_proxy = entity.surface.create_entity
   {
@@ -395,7 +385,41 @@ end
 
 local ghost_update_interval = 60
 
-local spawner_ghost_built = function(entity, tick)
+local spawner_ghost_built = function(entity, player_index)
+  local ghost_name = entity.ghost_name
+
+  if get_needs_technology(ghost_name) and not entity.force.technologies["hivemind-unlock-"..ghost_name].researched then
+    if player_index then
+      local player = game.get_player(player_index)
+      player.create_local_flying_text
+      {
+        text={"entity-not-unlocked", get_prototype(ghost_name).localised_name},
+        position=entity.position,
+        color=nil,
+        time_to_live=nil,
+        speed=nil
+      }
+    end
+    entity.destroy()
+    return
+  end
+
+  if needs_creep[ghost_name] and entity.surface.get_tile(entity.position).name ~= creep_name then
+    if player_index then
+      local player = game.get_player(player_index)
+      player.create_local_flying_text
+      {
+        text={"must-be-placed-on-creep", get_prototype(ghost_name).localised_name},
+        position=entity.position,
+        color=nil,
+        time_to_live=nil,
+        speed=nil
+      }
+    end
+    entity.destroy()
+    return
+  end
+
   local pollution = required_pollution[entity.ghost_name]
   local ghost_data = {entity = entity, required_pollution = pollution}
   local update_tick = entity.unit_number % ghost_update_interval
@@ -409,13 +433,13 @@ local on_built_entity = function(event)
   if not (entity and entity.valid) then return end
 
   if (spawner_map[entity.name]) then
-    return spawner_built(entity, event.tick)
+    return spawner_built(entity)
   end
 
   if entity.type == "entity-ghost" then
     local ghost_name = entity.ghost_name
     if required_pollution[ghost_name] then
-      return spawner_ghost_built(entity, event.tick)
+      return spawner_ghost_built(entity, event.player_index)
     end
   end
 
@@ -479,20 +503,38 @@ local get_units = function()
   return unit_list
 end
 
+local update_force_popcap_labels = function(force, caption)
+  for k, player in pairs (force.players) do
+    local gui = player.gui.left
+    local label = gui.unit_deployment_pop_cap_label
+    if not label then
+      label = gui.add{name = "unit_deployment_pop_cap_label", type = "label"}
+    end
+    label.caption = caption
+    label.visible = (caption ~= "")
+  end
+end
+
 local check_update_pop_cap = function(tick)
   if tick and tick % 60 ~= 0 then return end
   --local profiler = game.create_profiler()
   local list = get_units()
+  local forces = game.forces
+  local forces_to_update = {}
   data.pop_count = {}
-  for name, force in pairs (game.forces) do
+  for name, force in pairs (forces) do
     local total = 0
     local get_entity_count = force.get_entity_count
     for k = 1, #list do
       total = total + get_entity_count(list[k])
     end
     local index = force.index
+    local current = data.pop_count[index]
     data.pop_count[index] = total
+    local caption = total > 0 and {"popcap", total.."/"..max_pop_count} or ""
+    update_force_popcap_labels(force, caption)
   end
+
   --game.print({"", game.tick, profiler})
 end
 
@@ -581,7 +623,7 @@ end
 unit_deployment.on_configuration_changed = function()
   check_update_map_settings()
   check_update_pop_cap()
-  rendering.clear()
+  rendering.clear("Hive_Mind")
   redistribute_on_tick_checks()
 end
 

@@ -40,6 +40,13 @@ data.required_pollution =
   ["behemoth-worm-turret"] = 1000
 }
 
+data.default_unlocked =
+{
+  ["small-biter"] = true,
+  ["small-spitter"] = true,
+  ["small-worm-turret"] = true
+}
+
 data.needs_creep =
 {
   ["small-worm-turret"] =true,

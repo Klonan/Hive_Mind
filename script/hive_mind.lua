@@ -22,16 +22,6 @@ local recipe_evolution_factors =
   ["behemoth-spitter"] = 0.9,
 }
 
-local check_recipes = function(force)
-  local current_evolution_factor = force.evolution_factor
-  local recipes = force.recipes
-  for name, evolution_factor in pairs (recipe_evolution_factors) do
-    if current_evolution_factor >= evolution_factor then
-      recipes[name].enabled = true
-    end
-  end
-end
-
 local convert_nest
 
 local be_friends = function(force_1, force_2)
@@ -71,9 +61,9 @@ local create_hivemind_force = function()
 
   force.evolution_factor = enemy_force.evolution_factor
   for k, recipe in pairs (force.recipes) do
-    recipe.enabled = false
+    recipe.enabled = names.default_unlocked[recipe.name]
   end
-  check_recipes(force)
+
   return force
 end
 
@@ -401,24 +391,8 @@ local on_player_respawned = function(event)
 
 end
 
-local check_forces = function(event)
-
-  if event.tick % 297 ~= 0 then return end
-
-  local hive_force = get_hivemind_force()
-
-  local enemy_force = game.forces.enemy
-  local max = math.max(enemy_force.evolution_factor, hive_force.evolution_factor)
-
-  enemy_force.evolution_factor = max
-  hive_force.evolution_factor = max
-
-  check_recipes(hive_force)
-
-end
-
 local on_tick = function(event)
-  check_forces(event)
+
 end
 
 local pollution_values =
@@ -586,7 +560,7 @@ end
 local events =
 {
   [defines.events.on_player_respawned] = on_player_respawned,
-  [defines.events.on_tick] = on_tick,
+  --[defines.events.on_tick] = on_tick,
   [defines.events.on_player_mined_entity] = on_player_mined_entity,
   [defines.events.on_player_joined_game] = on_player_joined_game,
   [defines.events.on_player_created] = on_player_created,
