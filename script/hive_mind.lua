@@ -41,6 +41,16 @@ local be_friends = function(force_1, force_2)
   force_2.set_friend(force_1, true)
 end
 
+local is_hivemind_technology = function(technology)
+  local ingredients = technology.research_unit_ingredients
+  for k, ingredient in pairs (ingredients) do
+    if ingredient.type == "item" and ingredient.name == names.pollution_proxy then
+      return true
+    end
+  end
+  return false
+end
+
 local create_hivemind_force = function()
 
   local force = game.create_force("hivemind")
@@ -55,7 +65,10 @@ local create_hivemind_force = function()
     be_friends(force, game.forces.spectator)
   end
 
-  force.disable_research()
+  for k, tech in pairs (force.technologies) do
+    tech.enabled = is_hivemind_technology(tech)
+  end
+
   force.evolution_factor = enemy_force.evolution_factor
   for k, recipe in pairs (force.recipes) do
     recipe.enabled = false

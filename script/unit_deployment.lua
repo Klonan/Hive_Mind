@@ -388,7 +388,7 @@ local spawner_built = function(entity, tick)
 
   local spawner_data = {entity = entity, proxy = radar_proxy}
   data.proxies[radar_proxy.unit_number] = spawner_data
-  local update_tick = tick + (entity.unit_number % spawners_update_interval)
+  local update_tick = entity.unit_number % spawners_update_interval
   data.spawner_tick_check[update_tick] = data.spawner_tick_check[update_tick] or {}
   data.spawner_tick_check[update_tick][entity.unit_number] = spawner_data
 end
@@ -398,7 +398,7 @@ local ghost_update_interval = 60
 local spawner_ghost_built = function(entity, tick)
   local pollution = required_pollution[entity.ghost_name]
   local ghost_data = {entity = entity, required_pollution = pollution}
-  local update_tick = tick + (entity.unit_number % ghost_update_interval)
+  local update_tick = entity.unit_number % ghost_update_interval
   data.ghost_tick_check[update_tick] = data.ghost_tick_check[update_tick] or {}
   data.ghost_tick_check[update_tick][entity.unit_number] = ghost_data
   check_ghost(ghost_data)
@@ -422,32 +422,30 @@ local on_built_entity = function(event)
 end
 
 local check_spawners_on_tick = function(tick)
-  local entities = data.spawner_tick_check[tick]
+
+  local mod = tick % spawners_update_interval
+  local entities = data.spawner_tick_check[mod]
   if not entities then return end
-  --local profiler = game.create_profiler()
-  --local count = 0
-  data.spawner_tick_check[tick + spawners_update_interval] = entities
+
   for unit_number, spawner_data in pairs (entities) do
     --count = count + 1
     if check_spawner(spawner_data) then
       entities[unit_number] = nil
     end
   end
-  --game.print(tick.." - - "..count)
-  data.spawner_tick_check[tick] = nil
-  --game.print({"", profiler, "    "..game.tick})
 end
 
 local check_ghosts_on_tick = function(tick)
-  local entities = data.ghost_tick_check[tick]
+
+  local mod = tick % ghost_update_interval
+  local entities = data.ghost_tick_check[mod]
   if not entities then return end
-  data.ghost_tick_check[tick + ghost_update_interval] = entities
+
   for unit_number, ghost_data in pairs (entities) do
     if check_ghost(ghost_data) then
       entities[unit_number] = nil
     end
   end
-  data.ghost_tick_check[tick] = nil
 end
 
 local expiry_time = 180
@@ -531,6 +529,30 @@ local on_ai_command_completed = function(event)
   end
 end
 
+local redistribute_on_tick_checks = function()
+
+  local new_spawner_tick_check = {}
+  for k, array in pairs (data.spawner_tick_check) do
+    for unit_number, data in pairs (array) do
+      local mod = unit_number % spawners_update_interval
+      new_spawner_tick_check[mod] = new_spawner_tick_check[mod] or {}
+      new_spawner_tick_check[mod][unit_number] = data
+    end
+  end
+  data.spawner_tick_check = new_spawner_tick_check
+
+  local new_ghost_tick_check = {}
+  for k, array in pairs (data.ghost_tick_check) do
+    for unit_number, data in pairs (array) do
+      local mod = unit_number % ghost_update_interval
+      new_ghost_tick_check[mod] = new_ghost_tick_check[mod] or {}
+      new_ghost_tick_check[mod][unit_number] = data
+    end
+  end
+  data.ghost_tick_check = new_ghost_tick_check
+
+end
+
 local events =
 {
   [defines.events.on_built_entity] = on_built_entity,
@@ -560,6 +582,7 @@ unit_deployment.on_configuration_changed = function()
   check_update_map_settings()
   check_update_pop_cap()
   rendering.clear()
+  redistribute_on_tick_checks()
 end
 
 return unit_deployment

@@ -11,7 +11,7 @@ data:extend
     icon = steam.icon,
     icon_size = steam.icon_size,
     flags = {"hidden"},
-    stack_size = 1,
+    stack_size = 10,
     durability = 1
   }
 }

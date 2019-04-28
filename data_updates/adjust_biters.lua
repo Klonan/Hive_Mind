@@ -3,6 +3,13 @@ shared = require("shared")
 
 local util = require("data/tf_util/tf_util")
 
+local default_unlocked =
+{
+  ["small-biter"] = true,
+  ["small-spitter"] = true,
+  ["small-worm-turret"] = true
+}
+
 local make_biter_item = function(prototype, subgroup)
   local item =
   {
@@ -26,11 +33,63 @@ local make_biter_recipe = function(prototype, category)
     type = "recipe",
     name = prototype.name,
     localised_name = prototype.localised_name,
-    enabled = true,
+    enabled = default_unlocked[prototype.name],
     ingredients = {},
     energy_required = prototype.pollution_to_join_attack * 5,
     result = prototype.name,
     category = category
+  }
+  data:extend{recipe}
+end
+
+local make_unlock_technology = function(prototype, cost)
+  if default_unlocked[prototype.name] then return end
+  local tech =
+  {
+    type = "technology",
+    name = "hivemind-unlock-"..prototype.name,
+    icon = prototype.icon,
+    icon_size = prototype.icon_size,
+    icons = prototype.icons,
+    enabled = false,
+    effects =
+    {
+      {
+        type = "unlock-recipe",
+        recipe = prototype.name
+      },
+    },
+    unit =
+    {
+      count = cost,
+      ingredients = {{names.pollution_proxy, 1}},
+      time = 1
+    },
+    prerequisites = {},
+    order = prototype.name
+  }
+  data:extend({tech})
+end
+
+local worm_category =
+{
+  type = "recipe-category",
+  name = "worm-crafting-category"
+}
+
+data:extend{worm_category}
+
+local make_worm_recipe = function(prototype, category, energy)
+  local recipe =
+  {
+    type = "recipe",
+    name = prototype.name,
+    localised_name = prototype.localised_name,
+    enabled = default_unlocked[prototype.name],
+    ingredients = {},
+    energy_required = math.huge,
+    result = prototype.name,
+    category = worm_category.name
   }
   data:extend{recipe}
 end
@@ -67,6 +126,7 @@ local make_biter = function(biter)
   biter.radar_range = biter.radar_range or 2
   make_biter_item(biter, names.deployers.biter_deployer)
   make_biter_recipe(biter, names.deployers.biter_deployer)
+  make_unlock_technology(biter, biter.pollution_to_join_attack * 100)
   biter.ai_settings = biter.ai_settings or {}
   biter.ai_settings.destroy_when_commands_fail = false
   biter.friendly_map_color = {b = 1, g = 1}
@@ -79,6 +139,7 @@ local make_spitter = function(biter)
   biter.radar_range = biter.radar_range or 2
   make_biter_item(biter, names.deployers.spitter_deployer)
   make_biter_recipe(biter, names.deployers.spitter_deployer)
+  make_unlock_technology(biter, biter.pollution_to_join_attack * 100)
   biter.ai_settings = biter.ai_settings or {}
   biter.ai_settings.destroy_when_commands_fail = false
   biter.friendly_map_color = {b = 1, g = 1}
@@ -86,13 +147,20 @@ local make_spitter = function(biter)
   biter.localised_description = {"requires-pollution", biter.pollution_to_join_attack}
 end
 
+local worm_ammo_category = util.ammo_category("worm-biological")
+
 local make_worm = function(turret)
   make_worm_item(turret)
+  make_worm_recipe(turret, worm_category, shared.required_pollution[turret.name])
+  make_unlock_technology(turret, shared.required_pollution[turret.name] * 100)
   table.insert(turret.flags, "player-creation")
   turret.create_ghost_on_death = false
   turret.friendly_map_color = {b = 1, g = 0.5}
-  turret.localised_description = {"requires-pollution", shared.required_pollution[name]}
+  turret.localised_description = {"requires-pollution", shared.required_pollution[turret.name]}
   turret.collision_mask = {"water-tile", "player-layer", "train-layer"}
+  if turret.attack_parameters.ammo_type.category == "biological" then
+    turret.attack_parameters.ammo_type.category = worm_ammo_category
+  end
 end
 
 
@@ -143,6 +211,7 @@ turrets["small-worm-turret"].attack_parameters.damage_modifier = 15
 turrets["medium-worm-turret"].attack_parameters.damage_modifier = 30
 turrets["big-worm-turret"].attack_parameters.damage_modifier = 45
 turrets["behemoth-worm-turret"].attack_parameters.damage_modifier = 60
+--error(serpent.block(turrets["behemoth-worm-turret"].attack_parameters))
 
 for name, turret in pairs (turrets) do
   if turret.name:find("worm%-turret") then

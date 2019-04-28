@@ -8,7 +8,8 @@ local libs = {
   --debug = require "script/debug",
   unit_deployment = require("script/unit_deployment"),
   hive_mind = require("script/hive_mind"),
-  creep = require("script/creep")
+  creep = require("script/creep"),
+  pollution_lab = require("script/pollution_lab")
 }
 
 
