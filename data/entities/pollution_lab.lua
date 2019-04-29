@@ -85,13 +85,13 @@ local lab =
       shift = {0, -8}
     }
   },
-  flags = {"placeable-player", "player-creation", "placeable-off-grid"},
+  flags = {"placeable-player", "player-creation", --[["placeable-off-grid"]]},
   minable = nil,
   max_health = 150,
   corpse = nil,
   dying_explosion = spawner_graphics.dying_explosion,
-  collision_box = {{-2.7, -2.7}, {2.7, 2.7}},
-  selection_box = {{-3, -3}, {3, 3}},
+  collision_box = util.area({0,0}, 3.5),
+  selection_box = util.area({0,0}, 3),
   collision_mask = util.buildable_on_creep_collision_mask(),
   light = {intensity = 1, size = 20, color = tint},
   on_animation = on_animation,

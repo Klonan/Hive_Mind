@@ -15,14 +15,14 @@ machine.localised_name = {name}
 machine.localised_description = {"requires-pollution", shared.required_pollution[name]}
 machine.icon = graphics.icon
 machine.icon_size = graphics.icon_size
-machine.collision_box = {{-2.1, -2.1},{2.1, 2.1}}
-machine.selection_box = {{-2.5, -2.5},{2.5, 2.5}}
+machine.collision_box = util.area({0,0}, 2.5)
+machine.selection_box = util.area({0,0}, 2)
 machine.crafting_categories = {name}
 machine.crafting_speed = 1
 machine.ingredient_count = 100
 machine.module_specification = nil
 machine.minable = {result = name, mining_time = 5}
-machine.flags = {"placeable-off-grid", "placeable-neutral", "player-creation", "no-automated-item-removal", "not-deconstructable"}
+machine.flags = {--[["placeable-off-grid",]] "placeable-neutral", "player-creation", "no-automated-item-removal", "not-deconstructable"}
 machine.is_deployer = true
 machine.next_upgrade = nil
 machine.dying_sound = graphics.dying_sound
@@ -136,7 +136,7 @@ radar.icon_size = machine.icon_size
 radar.max_health = machine.max_health
 radar.corpse = nil
 radar.order = name.."-radar"
-radar.flags =  {"placeable-off-grid", "placeable-neutral", "player-creation", "no-automated-item-removal", "not-blueprintable", "hidden"}
+radar.flags =  {--[["placeable-off-grid",]] "placeable-neutral", "player-creation", "no-automated-item-removal", "not-blueprintable", "hidden"}
 radar.collision_mask = {}
 
 --only needed to make deconstruction work...

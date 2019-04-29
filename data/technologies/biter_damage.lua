@@ -26,7 +26,8 @@ local make_damage_tech = function(category, icons)
     },
     max_level = "infinite",
     upgrade = true,
-    order = catagory
+    order = catagory,
+    enabled = false
   }
   data:extend{tech}
 end

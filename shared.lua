@@ -27,6 +27,7 @@ data.creep_radius = 10
 data.creep_sticker = "creep-sticker"
 data.creep_landmine = "creep-landmine"
 data.pollution_lab = "pollution-lab"
+data.pollution_drill = "pollution-drill"
 
 data.required_pollution =
 {
@@ -34,6 +35,7 @@ data.required_pollution =
   [data.deployers.spitter_deployer] = 200,
   [data.creep_tumor] = 20,
   [data.pollution_lab] = 80,
+  [data.pollution_drill] = 10,
   ["small-worm-turret"] = 50,
   ["medium-worm-turret"] = 150,
   ["big-worm-turret"] = 400,

@@ -21,12 +21,12 @@ local entity =
       tint = {r = 0.5, b = 0.5}
     }
   },
-  flags = {"placeable-neutral", "player-creation", "placeable-off-grid"},
+  flags = {"placeable-neutral", "player-creation", --[["placeable-off-grid"]]},
   order = name,
   minable = nil,
   max_health = 20,
   collision_mask = {"ground-tile", "water-tile"},
-  collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
+  collision_box = {{-0.48, -0.48}, {0.48, 0.48}},
   selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
   animations = graphics.animations,
   dying_explosion = graphics.dying_explosion,

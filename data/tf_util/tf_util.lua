@@ -373,4 +373,10 @@ util.entity_types = function()
   }
 end
 
+util.area = function(position, radius)
+  local x = position[1] or position.x
+  local y = position[2] or position.y
+  return {{x - radius, y - radius}, {x + radius, y + radius}}
+end
+
 return util

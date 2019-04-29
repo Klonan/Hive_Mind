@@ -156,6 +156,7 @@ local make_worm = function(turret)
   if turret.attack_parameters.ammo_type.category == "biological" then
     turret.attack_parameters.ammo_type.category = worm_ammo_category
   end
+  util.remove_from_list(turret.flags, "placeable-off-grid")
 end
 
 
