@@ -252,7 +252,10 @@ local check_set_tile_register = function()
   local register = script_data.tiles_to_set
   local surfaces = game.surfaces
   for surface_index, tiles in pairs (register) do
-    surfaces[surface_index].set_tiles(tiles, true)
+    local surface = surfaces[surface_index]
+    if surface and surface.valid then
+      surface.set_tiles(tiles, true)
+    end
     register[surface_index] = {}
   end
 end
