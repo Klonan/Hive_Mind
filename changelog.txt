@@ -4,9 +4,9 @@ Date: 2019-05-??
   Changes:
     - Added Pollution lab, to research technologies.
     - Added Pollution drill, to mine crude oil and turn it directly into pollution.
-    - Added technologies to unlock more powerful biters/spitters/worms
+    - Added technologies to unlock the more powerful biters/spitters/worms.
     - Added infinite damage technologies for biters, spitters and worms.
-    - All hive buildings are places on-grid now, to help placement with creep and biter pathing.
+    - All hive buildings are placed on-grid now, to help placement with creep and biter pathing.
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.0
 Date: 2019-04-26
