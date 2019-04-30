@@ -599,6 +599,7 @@ lib.on_init = function()
   end
   set_map_settings()
   register_wave_defense()
+  get_hivemind_force()
 end
 
 lib.on_load = function()
