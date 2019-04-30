@@ -5,7 +5,7 @@ local graphics = util.copy(data.raw.lab.lab)
 --local animation = graphics.animations[1]
 local lab_scale = 1
 
-local tint = {r = 0.8, b = 0.8, g = 0.2}
+local tint = {r = 1, b = 1, g = 0.5}
 util.recursive_hack_tint(graphics, tint)
 util.recursive_hack_scale(graphics, lab_scale)
 --for k, animation in pairs ({graphics.on_animation, graphics.off_animation}) do

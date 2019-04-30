@@ -6,7 +6,7 @@ local script_data =
   labs = {}
 }
 
-local lab_update_rate = 59 * 5
+local lab_update_rate = 89
 
 local pollution_cache = {}
 
@@ -25,7 +25,7 @@ local get_required_pollution = function(technology)
   return count
 end
 
-local pollution_absorb_percent = 0.5
+local pollution_absorb_percent = 0.2
 local pollution_absorb_min = 1
 
 local update_lab = function(entity)

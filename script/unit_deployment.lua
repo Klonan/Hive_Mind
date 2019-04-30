@@ -293,7 +293,6 @@ local check_ghost = function(ghost_data)
 
   local origin = entity.position
   local r = get_sacrifice_radius()
-  local area = {{x = origin.x - r, y = origin.y - r}, {x = origin.x + r, y = origin.y + r}}
   local command =
   {
     type = defines.command.go_to_location,
@@ -303,18 +302,14 @@ local check_ghost = function(ghost_data)
   }
 
   local needed_pollution = ghost_data.required_pollution
-  for k, unit in pairs (surface.find_units{area = area, force = entity.force, condition = "same"}) do
+  for k, unit in pairs (surface.find_entities_filtered{position = origin, radius = r, force = entity.force, type = "unit"}) do
     local unit_number = unit.unit_number
-    if is_idle(unit_number) and distance(origin, unit.position) <= r then
-      --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "IDLE"}
-      unit.set_command(command)
-      local pollution = unit.prototype.pollution_to_join_attack
-      needed_pollution = needed_pollution - pollution
-      data.not_idle_units[unit_number] = {tick = game.tick, ghost_data = ghost_data}
-      if needed_pollution <= 0 then break end
-    else
-      --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "NOT IDLE"}
-    end
+    --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "IDLE"}
+    unit.set_command(command)
+    local pollution = unit.prototype.pollution_to_join_attack
+    needed_pollution = needed_pollution - pollution
+    data.not_idle_units[unit_number] = {tick = game.tick, ghost_data = ghost_data}
+    if needed_pollution <= 0 then break end
   end
 
   local progress = ghost_data.progress
@@ -349,8 +344,8 @@ local check_ghost = function(ghost_data)
   if not (radius and rendering.is_valid(radius)) then
     radius = rendering.draw_circle
     {
-      color = {r = 0.8, g = 0.8},
-      width = 2,
+      color = {r = 0.6, g = 0.6},
+      width = 1,
       target = entity,
       surface = entity.surface,
       forces = {entity.force},

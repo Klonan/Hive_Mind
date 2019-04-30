@@ -43,6 +43,7 @@ local make_unlock_technology = function(prototype, cost)
   {
     type = "technology",
     name = "hivemind-unlock-"..prototype.name,
+    localised_name = {"hivemind-unlock", prototype.localised_name or {"entity-name."..prototype.name}},
     icon = prototype.icon,
     icon_size = prototype.icon_size,
     icons = prototype.icons,
@@ -121,7 +122,7 @@ local make_biter = function(biter)
   biter.radar_range = biter.radar_range or 2
   make_biter_item(biter, names.deployers.biter_deployer)
   make_biter_recipe(biter, names.deployers.biter_deployer)
-  make_unlock_technology(biter, biter.pollution_to_join_attack * 100)
+  make_unlock_technology(biter, biter.pollution_to_join_attack * 50)
   biter.ai_settings = biter.ai_settings or {}
   biter.ai_settings.destroy_when_commands_fail = false
   biter.friendly_map_color = {b = 1, g = 1}
@@ -134,7 +135,7 @@ local make_spitter = function(biter)
   biter.radar_range = biter.radar_range or 2
   make_biter_item(biter, names.deployers.spitter_deployer)
   make_biter_recipe(biter, names.deployers.spitter_deployer)
-  make_unlock_technology(biter, biter.pollution_to_join_attack * 100)
+  make_unlock_technology(biter, biter.pollution_to_join_attack * 50)
   biter.ai_settings = biter.ai_settings or {}
   biter.ai_settings.destroy_when_commands_fail = false
   biter.friendly_map_color = {b = 1, g = 1}
@@ -147,7 +148,7 @@ local worm_ammo_category = util.ammo_category("worm-biological")
 local make_worm = function(turret)
   make_worm_item(turret)
   make_worm_recipe(turret, worm_category, shared.required_pollution[turret.name])
-  make_unlock_technology(turret, shared.required_pollution[turret.name] * 100)
+  make_unlock_technology(turret, shared.required_pollution[turret.name] * 50)
   table.insert(turret.flags, "player-creation")
   turret.create_ghost_on_death = false
   turret.friendly_map_color = {b = 1, g = 0.5}
