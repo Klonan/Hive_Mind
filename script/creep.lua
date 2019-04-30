@@ -117,7 +117,7 @@ spread_creep = function(unit_number, spawner_data)
     end
 
     radius = math.min(radius + root_2, max_radius)
-    tiles = shuffle_table(surface.find_tiles_filtered{area = get_area(position, radius), collision_mask = "ground-tile"})
+    tiles = shuffle_table(surface.find_tiles_filtered{position = position, radius = radius, collision_mask = "ground-tile"})
     spawner_data.tiles = tiles
     spawner_data.radius = radius
 
@@ -128,7 +128,7 @@ spread_creep = function(unit_number, spawner_data)
 
   for k, tile in pairs (tiles) do
     tiles[k] = nil
-    if tile.valid and (tile.name ~= names.creep) and (tile.name ~= "out-of-map") and (distance(tile.position, position) <= spawner_data.radius) then
+    if tile.valid and (tile.name ~= names.creep) and (tile.name ~= "out-of-map") then
       tile_to_set = tile
       break
     end
@@ -183,13 +183,11 @@ unspread_creep = function(unit_number, landmine_data)
     local new_radius = radius - root_2
 
     local position = landmine.position
-    tiles = shuffle_table(surface.find_tiles_filtered{area = get_area(position, radius), name = names.creep})
+    tiles = shuffle_table(surface.find_tiles_filtered{position = position, radius = radius, name = names.creep})
     for k, tile in pairs (tiles) do
       local tile_position = tile.position
       local tile_distance = distance(tile_position, position)
-      if tile_distance > (radius + root_2) then
-        tiles[k] = nil
-      elseif tile_distance < (new_radius - root_2) then
+      if tile_distance < (new_radius - root_2) then
         tiles[k] = nil
       end
     end
@@ -197,7 +195,7 @@ unspread_creep = function(unit_number, landmine_data)
     landmine_data.tiles = tiles
   end
 
-  local nearby_shrinking_landmines = surface.find_entities_filtered{name = names.creep_landmine, area = get_area(landmine.position, max_radius * 2)}
+  local nearby_shrinking_landmines = surface.find_entities_filtered{name = names.creep_landmine, position = landmine.position, radius = max_radius * 2}
   local nearby_active_landmines = {}
   local any_active = false
   for k, v in pairs (nearby_shrinking_landmines) do
@@ -293,7 +291,7 @@ local on_entity_died = function(event)
 
   --We need to notify nearby shrinking ones to reexpand their radius, as they may have already checked the nearby tiles and determined they should be left as creep.
 
-  local nearby_shrinking_landmines = creep_landmine.surface.find_entities_filtered{name = names.creep_landmine, area = get_area(creep_landmine.position, max_radius * 2)}
+  local nearby_shrinking_landmines = creep_landmine.surface.find_entities_filtered{name = names.creep_landmine, position = creep_landmine.position, radius = max_radius * 2}
   for k, v in pairs (nearby_shrinking_landmines) do
     local nearby_data = script_data.shrinking_landmines[v.unit_number]
     if nearby_data then
