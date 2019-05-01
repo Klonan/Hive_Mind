@@ -193,12 +193,12 @@ range_worm_medium   = 30
 range_worm_big      = 38
 range_worm_behemoth = 48
 ]]
---Laser turret is 24, flamethrower is 30, so lets make behemoth 35 and scale the rest accordingly
+--Laser turret is 24, flamethrower is 30, so lets make behemoth 40 and scale the rest accordingly
 
-turrets["small-worm-turret"].attack_parameters.range = 20
-turrets["medium-worm-turret"].attack_parameters.range = 25
-turrets["big-worm-turret"].attack_parameters.range = 30
-turrets["behemoth-worm-turret"].attack_parameters.range = 35
+turrets["small-worm-turret"].attack_parameters.range = 25
+turrets["medium-worm-turret"].attack_parameters.range = 30
+turrets["big-worm-turret"].attack_parameters.range = 35
+turrets["behemoth-worm-turret"].attack_parameters.range = 40
 
 --Also the damage is ridiculous:
 --[[damage_modifier_worm_small    = 36
