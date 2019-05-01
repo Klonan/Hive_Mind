@@ -360,11 +360,10 @@ local check_ghost = function(ghost_data)
 
 end
 
--- So, 59, so that its not exactly 60. Which means over a minute or so, each spawner will 'go first' at the pollution.
-local spawners_update_interval = 59
-
-local spawner_built = function(entity)
-  local radar_prototype = get_prototype(entity.name.."-radar") or error("Spawner being built does not have a radar proxy prototype "..entity.name)
+local make_proxy = function(entity)
+  local radar_prototype = get_prototype(entity.name.."-radar")
+  if not radar_prototype then return end
+  --game.print("Made proxy for ".. entity.name)
   local radar_proxy = entity.surface.create_entity
   {
     name = radar_prototype.name,
@@ -372,9 +371,14 @@ local spawner_built = function(entity)
     force = entity.force
   } or error("Couldn't build radar proxy for some reason...")
   entity.destructible = false
+  data.proxies[radar_proxy.unit_number] = entity
+end
 
+-- So, 59, so that its not exactly 60. Which means over a minute or so, each spawner will 'go first' at the pollution.
+local spawners_update_interval = 59
+
+local spawner_built = function(entity)
   local spawner_data = {entity = entity, proxy = radar_proxy}
-  data.proxies[radar_proxy.unit_number] = spawner_data
   local update_tick = entity.unit_number % spawners_update_interval
   data.spawner_tick_check[update_tick] = data.spawner_tick_check[update_tick] or {}
   data.spawner_tick_check[update_tick][entity.unit_number] = spawner_data
@@ -428,6 +432,8 @@ end
 local on_built_entity = function(event)
   local entity = event.created_entity or event.entity
   if not (entity and entity.valid) then return end
+
+  make_proxy(entity)
 
   if (spawner_map[entity.name]) then
     return spawner_built(entity)
@@ -548,12 +554,11 @@ local on_entity_died = function(event)
   if not (entity and entity.valid) then return end
   local unit_number = entity.unit_number
   if not unit_number then return end
-  local spawner_data = data.proxies[unit_number]
-  if not spawner_data then return end
+  local spawner = data.proxies[unit_number]
+  if not spawner then return end
   entity.destroy()
   data.proxies[unit_number] = nil
 
-  local spawner = spawner_data.entity
   if spawner and spawner.valid then
     spawner.destructible = true
     spawner.force.evolution_factor = spawner.force.evolution_factor + (1 * get_destroy_factor())
@@ -592,6 +597,15 @@ local redistribute_on_tick_checks = function()
 
 end
 
+local migrate_proxies = function()
+  local proxies = data.proxies
+  for k, proxy in pairs (proxies) do
+    if proxy.entity then
+      proxies[k] = proxy.entity
+    end
+  end
+end
+
 local events =
 {
   [defines.events.on_built_entity] = on_built_entity,
@@ -622,6 +636,7 @@ unit_deployment.on_configuration_changed = function()
   check_update_pop_cap()
   rendering.clear("Hive_Mind")
   redistribute_on_tick_checks()
+  migrate_proxies()
 end
 
 return unit_deployment

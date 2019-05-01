@@ -42,6 +42,13 @@ data.required_pollution =
   ["behemoth-worm-turret"] = 1000
 }
 
+data.needs_proxy_type =
+{
+  ["assembling-machine"] = true,
+  ["lab"] = true,
+  ["mining-drill"] = true
+}
+
 data.default_unlocked =
 {
   ["small-biter"] = true,

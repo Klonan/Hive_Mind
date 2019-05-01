@@ -117,52 +117,12 @@ local subgroup =
   ]]
 
 
-local radar = util.copy(data.raw.radar.radar)
-radar.name = name.."-radar"
-radar.pictures = {layers = {util.empty_sprite()}}
-radar.energy_source = {type = "void"}
-radar.collision_box = machine.collision_box
-radar.selection_box = machine.selection_box
-radar.selectable_in_game = false
-radar.minable = nil
-radar.integration_patch = nil
-radar.working_sound = nil
-radar.vehicle_impact_sound = nil
-radar.max_distance_of_sector_revealed = 1
-radar.max_distance_of_nearby_sector_revealed = 2
-radar.resistances = machine.resistances
-radar.icon = machine.icon
-radar.icon_size = machine.icon_size
-radar.max_health = machine.max_health
-radar.corpse = nil
-radar.order = name.."-radar"
-radar.flags =  {--[["placeable-off-grid",]] "placeable-neutral", "player-creation", "no-automated-item-removal", "not-blueprintable", "hidden"}
-radar.collision_mask = {}
-
---only needed to make deconstruction work...
-local radar_item = {
-  type = "item",
-  name = radar.name,
-  localised_name = {name},
-  localised_description = {"requires-pollution", shared.required_pollution[name]},
-  icon = machine.icon,
-  icon_size = machine.icon_size,
-  flags = {"hidden"},
-  subgroup = name,
-  order = "aa-"..name,
-  place_result = radar.name,
-  stack_size = 50
-}
-
-
-
 data:extend
 {
   machine,
   item,
   category,
   subgroup,
-  radar,
   radar_item
   --recipe,
 }

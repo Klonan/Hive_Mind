@@ -87,8 +87,8 @@ local events =
 {
   --[defines.events.on_chunk_generated] = on_chunk_generated,
   [defines.events.script_raised_revive] = on_built_entity,
-  --[defines.events.script_raised_built] = on_built_entity,
-  --[defines.events.on_built_entity] = on_built_entity,
+  [defines.events.script_raised_built] = on_built_entity,
+  [defines.events.on_built_entity] = on_built_entity,
   --[defines.events.on_biter_base_built] = on_built_entity,
   [defines.events.on_tick] = on_tick,
   --[defines.events.on_trigger_created_entity] = on_trigger_created_entity,
