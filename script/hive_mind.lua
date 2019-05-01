@@ -102,8 +102,8 @@ end
 
 local reset_gun_inventory = function(player)
   if not player.character then return end
-  local gun_inventory = player.character.get_inventory(defines.inventory.player_guns)
-  local ammo_inventory = player.character.get_inventory(defines.inventory.player_ammo)
+  local gun_inventory = player.character.get_inventory(defines.inventory.character_guns)
+  local ammo_inventory = player.character.get_inventory(defines.inventory.character_ammo)
   gun_inventory.clear()
   ammo_inventory.clear()
   gun_inventory.insert(player.character.name.."-gun")

@@ -235,7 +235,7 @@ util.projectile_collision_mask = function()
 end
 
 util.creep_collision_mask = function()
-  return {"item-layer"}
+  return {"item-layer", "floor-layer"}
 end
 
 util.buildable_on_creep_collision_mask = function()

@@ -12,7 +12,7 @@ local ugly_hack = function(layers)
 end
 
 local make_biter_player = function(name, graphics)
-  local player = util.copy(data.raw.player.player)
+  local player = util.copy(data.raw.character.character)
   local biter_walk = graphics.run_animation
   biter_walk.layers[2].apply_runtime_tint = true
   biter_walk.layers[2].hr_version.apply_runtime_tint = true

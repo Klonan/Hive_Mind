@@ -32,16 +32,16 @@ data:extend
 }
 
 for k, v in pairs (data.raw.cliff) do
-  v.collision_mask = {"player-layer", "train-layer"}
+  v.collision_mask = {"player-layer", "train-layer", "object-layer"}
 end
 
 for k, v in pairs (data.raw.tree) do
-  v.collision_mask = {"player-layer", "train-layer"}
+  v.collision_mask = {"player-layer", "train-layer", "object-layer"}
 end
 
 for k, v in pairs (data.raw["simple-entity"]) do
   if v.count_as_rock_for_filtered_deconstruction then
-    v.collision_mask = {"player-layer", "train-layer"}
+    v.collision_mask = {"player-layer", "train-layer", "object-layer"}
   end
 end
 

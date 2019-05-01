@@ -46,6 +46,7 @@ local landmine =
             type = "area",
             radius = names.creep_radius + 1,
             force = "enemy",
+            collision_mask = {"player-layer"},
             action_delivery =
             {
               type = "instant",
@@ -53,7 +54,7 @@ local landmine =
               {
                 {
                   type = "create-entity",
-                  entity_name = names.creep_sticker,
+                  entity_name = names.sticker_proxy,
                   trigger_created_entity = true
                 }
               }
@@ -76,8 +77,80 @@ local sticker =
   target_movement_modifier = 1/1.3
 }
 
+local sticker_proxy =
+{
+  type = "simple-entity-with-owner",
+  name = names.sticker_proxy,
+  flags = {"not-on-map"},
+  picture = util.empty_sprite()
+}
+
+--[[  {
+    type = "explosion",
+    name = "explosion-gunshot",
+    flags = {"not-on-map"},
+    animations =
+    {
+      {
+        filename = "__base__/graphics/entity/explosion-gunshot/explosion-gunshot.png",
+        priority = "extra-high",
+        width = 34,
+        height = 38,
+        frame_count = 2,
+        animation_speed = 1.5,
+        shift = {0, 0}
+      },
+      {
+        filename = "__base__/graphics/entity/explosion-gunshot/explosion-gunshot.png",
+        priority = "extra-high",
+        width = 34,
+        height = 38,
+        x = 34 * 2,
+        frame_count = 2,
+        animation_speed = 1.5,
+        shift = {0, 0}
+      },
+      {
+        filename = "__base__/graphics/entity/explosion-gunshot/explosion-gunshot.png",
+        priority = "extra-high",
+        width = 34,
+        height = 38,
+        x = 34 * 4,
+        frame_count = 3,
+        animation_speed = 1.5,
+        shift = {0, 0}
+      },
+      {
+        filename = "__base__/graphics/entity/explosion-gunshot/explosion-gunshot.png",
+        priority = "extra-high",
+        width = 34,
+        height = 38,
+        x = 34 * 7,
+        frame_count = 3,
+        animation_speed = 1.5,
+        shift = {0, 0}
+      },
+      {
+        filename = "__base__/graphics/entity/explosion-gunshot/explosion-gunshot.png",
+        priority = "extra-high",
+        width = 34,
+        height = 38,
+        x = 34 * 10,
+        frame_count = 3,
+        animation_speed = 1.5,
+        shift = {0, 0}
+      }
+    },
+    rotate = true,
+    light = {intensity = 1, size = 10, color = {r=1.0, g=1.0, b=1.0}},
+    smoke = "smoke-fast",
+    smoke_count = 1,
+    smoke_slow_down_factor = 1
+  },]]
+
 data:extend
 {
   landmine,
-  sticker
+  sticker,
+  sticker_proxy
 }

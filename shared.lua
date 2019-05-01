@@ -28,6 +28,7 @@ data.creep_sticker = "creep-sticker"
 data.creep_landmine = "creep-landmine"
 data.pollution_lab = "pollution-lab"
 data.pollution_drill = "pollution-drill"
+data.sticker_proxy = "sticker-proxy"
 
 data.required_pollution =
 {
