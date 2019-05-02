@@ -1,3 +1,4 @@
+
 local make_proxy = function(prototype)
 
   local radar = util.copy(data.raw.radar.radar)
