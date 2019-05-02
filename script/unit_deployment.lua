@@ -9,7 +9,8 @@ local data =
   destroy_factor = 0.002,
   enemy_attack_pollution_consumption_modifier = 1,
   can_spawn = false,
-  pop_count = {}
+  pop_count = {},
+  max_pop_count = 1000
 }
 
 local get_destroy_factor = function()
@@ -20,9 +21,12 @@ local get_enemy_attack_pollution_consumption_modifier = function()
   return data.enemy_attack_pollution_consumption_modifier
 end
 
-local max_pop_count = 1000
+local get_max_pop_count = function()
+  return data.max_pop_count
+end
+
 local can_spawn_units = function(force_index)
-  return data.pop_count[force_index] < max_pop_count
+  return data.pop_count[force_index] < get_max_pop_count()
 end
 
 local names = names.deployers
@@ -637,6 +641,7 @@ unit_deployment.on_configuration_changed = function()
   rendering.clear("Hive_Mind")
   redistribute_on_tick_checks()
   migrate_proxies()
+  data.max_pop_count = data.max_pop_count or 1000
 end
 
 return unit_deployment
