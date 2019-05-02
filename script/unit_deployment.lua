@@ -492,7 +492,7 @@ local check_not_idle_units = function(tick)
 end
 
 local check_update_map_settings = function(tick)
-  if tick and tick % 6 ~= 0 then return end
+  if tick and tick % 600 ~= 0 then return end
   data.destroy_factor = game.map_settings.enemy_evolution.destroy_factor
   data.enemy_attack_pollution_consumption_modifier = game.map_settings.pollution.enemy_attack_pollution_consumption_modifier
 end
