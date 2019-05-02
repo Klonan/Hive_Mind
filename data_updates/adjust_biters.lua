@@ -150,9 +150,10 @@ local just_guess = function(turret)
 end
 
 local make_worm = function(turret)
+  if not shared.required_pollution[turret.name] then return end
   make_worm_item(turret)
   make_worm_recipe(turret, worm_category, shared.required_pollution[turret.name])
-  make_unlock_technology(turret, (shared.required_pollution[turret.name] or just_guess(turret)) * 50)
+  make_unlock_technology(turret, shared.required_pollution[turret.name])
   table.insert(turret.flags, "player-creation")
   turret.create_ghost_on_death = false
   turret.friendly_map_color = {b = 1, g = 0.5}
