@@ -17,6 +17,7 @@ local make_proxy = function(prototype)
   radar.icon_size = prototype.icon_size
   radar.icons = prototype.icons
   radar.max_health = prototype.max_health
+  radar.healing_per_tick = prototype.healing_per_tick
   radar.corpse = nil
   radar.order = prototype.name.."-radar"
   radar.flags =  {--[["placeable-off-grid",]] "placeable-neutral", "player-creation", "no-automated-item-removal", "not-blueprintable", "hidden"}

@@ -62,7 +62,7 @@ local make_unlock_technology = function(prototype, cost)
       time = 1
     },
     prerequisites = {},
-    order = prototype.name
+    order = prototype.type..prototype.order..prototype.name
   }
   data:extend({tech})
 end
@@ -152,7 +152,7 @@ end
 local make_worm = function(turret)
   make_worm_item(turret)
   make_worm_recipe(turret, worm_category, shared.required_pollution[turret.name])
-  make_unlock_technology(turret, shared.required_pollution[turret.name] or just_guess(turret) * 50)
+  make_unlock_technology(turret, (shared.required_pollution[turret.name] or just_guess(turret)) * 50)
   table.insert(turret.flags, "player-creation")
   turret.create_ghost_on_death = false
   turret.friendly_map_color = {b = 1, g = 0.5}

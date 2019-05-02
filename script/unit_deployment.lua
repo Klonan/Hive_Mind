@@ -538,7 +538,7 @@ local check_update_pop_cap = function(tick)
     local index = force.index
     local current = data.pop_count[index]
     data.pop_count[index] = total
-    local caption = total > 0 and {"popcap", total.."/"..max_pop_count} or ""
+    local caption = total > 0 and {"popcap", total.."/"..get_max_pop_count()} or ""
     update_force_popcap_labels(force, caption)
   end
 
