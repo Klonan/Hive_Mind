@@ -271,8 +271,8 @@ local on_trigger_created_entity = function(event)
   if not (entity and entity.valid) then return end
 
 
-  if entity.name ~= names.sticker_proxy then return end
-
+  if entity.name ~= names.creep_stick then return end
+  game.print("Works fine "..entity.name)
   --local profiler = game.create_profiler()
 
   local tile = entity.surface.get_tile(entity.position)
