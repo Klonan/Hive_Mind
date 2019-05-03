@@ -53,8 +53,8 @@ local landmine =
               target_effects =
               {
                 {
-                  type = "create-entity",
-                  entity_name = names.sticker_proxy,
+                  type = "create-sticker",
+                  sticker = names.creep_sticker,
                   trigger_created_entity = true
                 }
               }
@@ -151,6 +151,5 @@ local sticker_proxy =
 data:extend
 {
   landmine,
-  sticker,
-  sticker_proxy
+  sticker
 }
