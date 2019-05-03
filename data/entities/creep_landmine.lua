@@ -54,7 +54,7 @@ local landmine =
               {
                 {
                   type = "create-sticker",
-                  entity_name = names.creep_sticker,
+                  sticker = names.creep_sticker,
                   trigger_created_entity = true
                 }
               }

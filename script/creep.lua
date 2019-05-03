@@ -271,24 +271,13 @@ local on_trigger_created_entity = function(event)
   if not (entity and entity.valid) then return end
 
 
-  if entity.name ~= names.creep_stick then return end
-  game.print("Works fine "..entity.name)
-  --local profiler = game.create_profiler()
+  if entity.name ~= names.creep_sticker then return end
 
   local tile = entity.surface.get_tile(entity.position)
 
-  if tile.name == names.creep then
-    --He is on creep, well, someone is, lets find him and apply a slowdown sticker.
-    local force = entity.force
-    local get_cease_fire = force.get_cease_fire
-    local surface = entity.surface
-    local create_entity = surface.create_entity
-    local position = entity.position
-    for k, v in pairs (surface.find_entities_filtered{position = entity.position, type = sticker_types}) do
-      if not get_cease_fire(v.force) then
-        create_entity{name = names.creep_sticker, position = position, target = v, force = force}
-      end
-    end
+  if tile.name ~= names.creep then
+    --He is not on creep, destryo
+    return
   end
 
   entity.destroy()
