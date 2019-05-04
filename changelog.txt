@@ -7,6 +7,7 @@ Date: 2019-05-04
     - Another attempt to balance worms, reduced their range again and increased cost to spawn.
     - Increased technology costs for unlocking biters/spitters/worms.
     - Increased cost for pollution drill and creep tumor.
+    - Fixed bug with cliff collision mask.
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.0
 Date: 2019-05-??
