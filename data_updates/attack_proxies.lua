@@ -1,3 +1,4 @@
+error("Not used")
 
 local make_proxy = function(prototype)
 

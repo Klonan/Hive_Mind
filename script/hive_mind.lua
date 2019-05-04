@@ -281,11 +281,14 @@ join_hive = function(player)
     end
   end
 
+  local position = player.position
+  local surface = player.surface
+
   if remote.interfaces["pvp"] then
-    local surface = game.surfaces["battle_surface_1"] or game.surfaces["battle_surface_2"]
-    if surface then
+    local battle_surface = game.surfaces["battle_surface_1"] or game.surfaces["battle_surface_2"]
+    if battle_surface then
+      surface = battle_surface
       local teams = remote.call("pvp", "get_teams")
-      local position
       for k, team in pairs (teams) do
         local force = game.forces[team.name]
         if force and force.valid then
@@ -293,18 +296,19 @@ join_hive = function(player)
           break
         end
       end
-      if position then
-        player.teleport(position, surface)
-      end
     else
       player.print({"cant-join-pvp"})
       return
     end
   end
-  local spawner = get_root_spawner(player.surface, position)
+
+  local spawner = get_root_spawner(surface, position)
   if not spawner then
     player.print({"cant-find-spawner"})
     return
+  end
+  if position then
+    player.teleport(position, surface)
   end
   local get_quick_bar_slot = player.get_quick_bar_slot
   local set_quick_bar_slot = player.set_quick_bar_slot
@@ -335,6 +339,7 @@ join_hive = function(player)
   --player.game_view_settings.show_controller_gui = false
   create_character(player)
   player.color = {r = 255, g = 100, b = 100}
+  player.chat_color = {r = 255, g = 100, b = 100}
   player.tag = "[color=255,100,100]HIVE[/color]"
   gui_init(player)
   game.print{"joined-hive", player.name}

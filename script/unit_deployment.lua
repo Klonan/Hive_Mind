@@ -5,7 +5,6 @@ local data =
   spawner_tick_check = {},
   ghost_tick_check = {},
   not_idle_units = {},
-  proxies = {},
   destroy_factor = 0.002,
   enemy_attack_pollution_consumption_modifier = 1,
   can_spawn = false,
@@ -365,6 +364,7 @@ local check_ghost = function(ghost_data)
 end
 
 local make_proxy = function(entity)
+  error("Not used")
   local radar_prototype = get_prototype(entity.name.."-radar")
   if not radar_prototype then return end
   --game.print("Made proxy for ".. entity.name)
@@ -437,7 +437,7 @@ local on_built_entity = function(event)
   local entity = event.created_entity or event.entity
   if not (entity and entity.valid) then return end
 
-  make_proxy(entity)
+  --make_proxy(entity)
 
   if (spawner_map[entity.name]) then
     return spawner_built(entity)
@@ -554,6 +554,7 @@ local on_tick = function(event)
 end
 
 local on_entity_died = function(event)
+  error("Not used")
   local entity = event.entity
   if not (entity and entity.valid) then return end
   local unit_number = entity.unit_number
@@ -603,11 +604,15 @@ end
 
 local migrate_proxies = function()
   local proxies = data.proxies
+  if not proxies then return end
   for k, proxy in pairs (proxies) do
-    if proxy.entity then
-      proxies[k] = proxy.entity
+    if proxy.valid then
+      proxy.destroy()
+    elseif proxy.entity and proxy.entity.valid then
+      proxy.entity.destroy()
     end
   end
+  data.proxies = nil
 end
 
 local events =
@@ -617,7 +622,7 @@ local events =
   [defines.events.script_raised_revive] = on_built_entity,
   [defines.events.script_raised_built] = on_built_entity,
   [defines.events.on_tick] = on_tick,
-  [defines.events.on_entity_died] = on_entity_died,
+  --[defines.events.on_entity_died] = on_entity_died,
   [defines.events.on_ai_command_completed] = on_ai_command_completed
 }
 

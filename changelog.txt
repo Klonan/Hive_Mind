@@ -1,3 +1,16 @@
+TODO:
+
+  - Remove proxies DONE
+  - Fix stuck bitesr on convert
+  - Fix PvP restart messing technology
+  - Fix teleporting player the not setting him to hivemind DONE
+---------------------------------------------------------------------------------------------------
+Version: 0.3.3
+Date: 2019-05-04
+  Changes:
+    - Removed the internal system of attack proxies. So grenades can hurt the hive buildings properly now.
+    - Fixed players teleporting when joining the hive fails.
+    - Increased the 'Unlock' technology cost multiplier from 100 -> 250, in an attempt to balance the speed of tech progression.
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.2
 Date: 2019-05-04
