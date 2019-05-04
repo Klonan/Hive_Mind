@@ -6,7 +6,7 @@ local script_data =
   player_lights = {},
   previous_life_data = {},
   player_spawns = {},
-
+  force_balance = false
 }
 
 
@@ -178,29 +178,28 @@ local get_hive_entities = function(entity)
   return map
 end
 
-convert_nest = function(player)
+local get_root_spawner = function(surface, position)
+  local radius = 100
+  local spawner
+  local params = {position = position, radius = radius, type = "unit-spawner", force = "enemy", limit = nil}
+  while true do
+    local spawners = surface.find_entities_filtered(params)
+    local count = #spawners
+    if count > 0 then
+      return spawners[math.random(count)]
+    end
+    params.radius = params.radius * 1.5
+    if params.radius > 5000 then
+      return
+    end
+  end
+end
+
+convert_nest = function(player, spawner)
   local surface = player.surface
   --local origin = player.force.get_spawn_position(surface)
   local origin = player.position
   local force = player.force
-  local radius = 100
-  local spawner
-  local keep_going = true
-  while keep_going do
-    local area = {{origin.x - radius, origin.y - radius},{origin.x + radius, origin.y + radius}}
-    radius = radius + 100
-    if radius > 2000 then
-      area = nil
-      keep_going = false
-    end
-    local spawners = surface.find_entities_filtered{area = area, type = "unit-spawner", force = "enemy", limit = nil}
-   local count = #spawners
-   if count > 0 then
-     spawner = spawners[math.random(count)]
-     break
-    end
-  end
-  if not spawner then return end
   local position = spawner.position
   script_data.player_spawns[player.index] = position
   local entities = get_hive_entities(spawner)
@@ -264,7 +263,49 @@ for name, pollution in pairs (names.required_pollution) do
 end
 
 join_hive = function(player)
+
   local force = get_hivemind_force()
+  if script_data.force_balance then
+    local max = 0
+    local name
+    for k, force in pairs (game.forces) do
+      local count = #force.connected_players
+      if count > max then
+        max = count
+        name = force.name
+      end
+    end
+    if name == force.name then
+      player.print({"cant-join-force-balance"})
+      return
+    end
+  end
+
+  if remote.interfaces["pvp"] then
+    local surface = game.surfaces["battle_surface_1"] or game.surfaces["battle_surface_2"]
+    if surface then
+      local teams = remote.call("pvp", "get_teams")
+      local position
+      for k, team in pairs (teams) do
+        local force = game.forces[team.name]
+        if force and force.valid then
+          position = force.get_spawn_position(surface)
+          break
+        end
+      end
+      if position then
+        player.teleport(position, surface)
+      end
+    else
+      player.print({"cant-join-pvp"})
+      return
+    end
+  end
+  local spawner = get_root_spawner(player.surface, position)
+  if not spawner then
+    player.print({"cant-find-spawner"})
+    return
+  end
   local get_quick_bar_slot = player.get_quick_bar_slot
   local set_quick_bar_slot = player.set_quick_bar_slot
   local quickbar = {}
@@ -274,6 +315,7 @@ join_hive = function(player)
     set_quick_bar_slot(k, biter_quickbar[k])
   end
   player.set_active_quick_bar_page(1, 1)
+  player.set_active_quick_bar_page(2, 2)
   local previous_life_data =
   {
     force = player.force,
@@ -282,14 +324,17 @@ join_hive = function(player)
     controller = player.controller_type,
     position = player.position,
     quickbar = quickbar,
-    tag = player.tag
+    tag = player.tag,
+    color = player.color,
+    chat_color = player.chat_color
   }
   script_data.previous_life_data[player.index] = previous_life_data
   player.character = nil
   player.force = force
-  convert_nest(player)
+  convert_nest(player, spawner)
   --player.game_view_settings.show_controller_gui = false
   create_character(player)
+  player.color = {r = 255, g = 100, b = 100}
   player.tag = "[color=255,100,100]HIVE[/color]"
   gui_init(player)
   game.print{"joined-hive", player.name}
@@ -320,16 +365,18 @@ local check_hivemind_disband = function()
   local enemy_force = game.forces.enemy
   for surface_index, surface in pairs(game.surfaces) do
     for k, entity in pairs (surface.find_entities_filtered(params)) do
-      if map[entity.name] then
-        surface.create_entity{name = map[entity.name], position = entity.position, force = entity.force, raise_built = true}
-        entity.destroy()
-      elseif destroy_map_type[entity.type] then
-        entity.destroy()
-      else
-        if entity.type == "unit" then
-          entity.ai_settings.allow_try_return_to_spawner = true
+      if entity.valid then
+        if map[entity.name] then
+          surface.create_entity{name = map[entity.name], position = entity.position, force = entity.force, raise_built = true}
+          entity.destroy()
+        elseif destroy_map_type[entity.type] then
+          entity.destroy()
+        else
+          if entity.type == "unit" then
+            entity.ai_settings.allow_try_return_to_spawner = true
+          end
+          entity.force = enemy_force
         end
-        entity.force = enemy_force
       end
     end
   end
@@ -345,12 +392,16 @@ leave_hive = function(player)
   local character = previous_life_data.character
   local controller = previous_life_data.controller
   local character_name = previous_life_data.character_name
+  local color = previous_life_data.color or {r = 255, g = 255, b = 255}
+  local chat_color = previous_life_data.chat_color or color
 
   local biter = player.character
   player.character = nil
   if biter and biter.valid then biter.die() end
 
   player.force = force
+  player.color = color
+  player.chat_color = chat_color
   local surface = player.surface
   if character then
     --he used to have a character
@@ -455,6 +506,9 @@ end
 remote.add_interface("hive_mind",
 {
   --test = function(player) return join_hive(player) end
+  set_force_balance = function(bool)
+    script_data.force_balance = bool
+  end
 })
 
 local on_marked_for_deconstruction = function(event)
@@ -557,6 +611,22 @@ local on_gui_opened = function(event)
   end
 end
 
+local on_forces_merging = function(event)
+  local source = event.source
+  local destination = event.destination
+
+  if not (source and source.valid and destination and destination.valid) then
+    return
+  end
+
+  for k, data in pairs (script_data.previous_life_data) do
+    if data.force == source then
+      data.force = destination
+    end
+  end
+
+end
+
 local events =
 {
   [defines.events.on_player_respawned] = on_player_respawned,
@@ -571,6 +641,7 @@ local events =
   [defines.events.on_player_gun_inventory_changed] = on_player_gun_inventory_changed,
   [defines.events.on_player_ammo_inventory_changed] = on_player_ammo_inventory_changed,
   [defines.events.on_player_armor_inventory_changed] = on_player_armor_inventory_changed,
+  [defines.events.on_forces_merging] = on_forces_merging,
   [defines.events.on_gui_opened] = on_gui_opened
 
 }

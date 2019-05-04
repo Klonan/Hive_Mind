@@ -34,13 +34,13 @@ data.required_pollution =
 {
   [data.deployers.biter_deployer] = 100,
   [data.deployers.spitter_deployer] = 200,
-  [data.creep_tumor] = 20,
-  [data.pollution_lab] = 80,
-  [data.pollution_drill] = 10,
-  ["small-worm-turret"] = 50,
-  ["medium-worm-turret"] = 150,
-  ["big-worm-turret"] = 400,
-  ["behemoth-worm-turret"] = 1000
+  [data.creep_tumor] = 50,
+  [data.pollution_lab] = 150,
+  [data.pollution_drill] = 100,
+  ["small-worm-turret"] = 150,
+  ["medium-worm-turret"] = 350,
+  ["big-worm-turret"] = 800,
+  ["behemoth-worm-turret"] = 2000
 }
 
 data.needs_proxy_type =

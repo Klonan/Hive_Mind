@@ -32,7 +32,7 @@ data:extend
 }
 
 for k, v in pairs (data.raw.cliff) do
-  v.collision_mask = {"player-layer", "train-layer", "object-layer"}
+  v.collision_mask = {"player-layer", "train-layer", "object-layer", "not-colliding-with-itself"}
 end
 
 for k, v in pairs (data.raw.tree) do

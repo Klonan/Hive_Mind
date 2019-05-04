@@ -640,7 +640,7 @@ unit_deployment.on_configuration_changed = function()
   check_update_pop_cap()
   rendering.clear("Hive_Mind")
   redistribute_on_tick_checks()
-  migrate_proxies()
+  pcall(migrate_proxies)
   data.max_pop_count = data.max_pop_count or 1000
 end
 

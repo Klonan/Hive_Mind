@@ -1,8 +1,12 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.2
-Date: 2019-05-??
+Date: 2019-05-04
   Changes:
     - Some small optimizations around creep spreading/shrinking.
+    - Added option to force balance between hive mind force and others set with remote.call("hive_mind", "set_force_balance", true).
+    - Another attempt to balance worms, reduced their range again and increased cost to spawn.
+    - Increased technology costs for unlocking biters/spitters/worms.
+    - Increased cost for pollution drill and creep tumor.
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.0
 Date: 2019-05-??
