@@ -188,39 +188,7 @@ end
     orientation :: float (optional): The orientation of the text. Default is 0.
     alignment :: string (optional): Defaults to "left". Other options are "right" and "center".
     scale_with_zoom :: boolean (optional): Defaults to false. If true, the text is always the same size, regardless of player zoom.]]
-
-local teleport_unit_away = function(unit, area)
-  local center = util.center(area)
-  local position = unit.position
-  local dx = position.x - center.x
-  local dy = position.y - center.y
-  local radius = (util.radius(area) + unit.get_radius())
-  local current_distance = ((dx * dx) + (dy * dy) ) ^ 0.5
-  if current_distance == 0 then
-    dx = radius
-    dy = radius
-  else
-    local scale_factor = radius / current_distance
-    dx = dx * scale_factor
-    dy = dy * scale_factor
-  end
-  local new_position = {x = center.x + dx, y = center.y + dy}
-  --[[
-
-    game.print(serpent.block
-    {
-      dx = dx, dy = dy,
-      center = center,
-      new_position = new_position,
-      radius = radius,
-      current_distance = current_distance
-    })
-
-    ]]
-
-  local non_collide = unit.surface.find_non_colliding_position(unit.name, new_position, 0, 0.1)
-  unit.teleport(non_collide)
-end
+local teleport_unit_away = util.teleport_unit_away
 
 local try_to_revive_entity = function(entity)
   local force = entity.force
@@ -603,6 +571,12 @@ local redistribute_on_tick_checks = function()
 end
 
 local migrate_proxies = function()
+  local types = {"assembling-machine", "lab", "mining-drill"}
+  for k, surface in pairs (game.surfaces) do
+    for k, entity in pairs (surface.find_entities_filtered{type = types, force = "hivemind"}) do
+      entity.destructible = true
+    end
+  end
   local proxies = data.proxies
   if not proxies then return end
   for k, proxy in pairs (proxies) do

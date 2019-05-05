@@ -91,4 +91,24 @@ util.angle = function(position_1, position_2)
   return math.atan2(d_y, d_x)
 end
 
+util.teleport_unit_away = function(unit, area)
+  local center = util.center(area)
+  local position = unit.position
+  local dx = position.x - center.x
+  local dy = position.y - center.y
+  local radius = (util.radius(area) + unit.get_radius())
+  local current_distance = ((dx * dx) + (dy * dy) ) ^ 0.5
+  if current_distance == 0 then
+    dx = radius
+    dy = radius
+  else
+    local scale_factor = radius / current_distance
+    dx = dx * scale_factor
+    dy = dy * scale_factor
+  end
+  local new_position = {x = center.x + dx, y = center.y + dy}
+  local non_collide = unit.surface.find_non_colliding_position(unit.name, new_position, 0, 0.1)
+  unit.teleport(non_collide)
+end
+
 return util

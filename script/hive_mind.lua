@@ -152,25 +152,22 @@ local create_character = function(player)
 
 end
 
-local area = function(position, radius)
-  return {{position.x - radius, position.y - radius},{position.x + radius, position.y + radius}}
-end
-
 local get_hive_entities = function(entity)
   local map = {}
   local surface = entity.surface
   local find = surface.find_entities_filtered
-  local params = {force = "enemy", type = {"turret", "unit", "unit-spawner"}}
-  local radius = 12
+  local params = {force = "enemy", type = {"turret", "unit", "unit-spawner"}, radius = 20}
   --local count = 1
   local function recursive_find_neighbors(entity)
     local unit_number = entity.unit_number
     if (not unit_number) or map[unit_number] then return end
     map[entity.unit_number] = entity
-    params.area = area(entity.position, radius)
-    for k, nearby in pairs (find(params)) do
-      recursive_find_neighbors(nearby)
-      --count = count + 1
+    params.position = entity.position
+    if entity.type == "unit-spawner" then
+      for k, nearby in pairs (find(params)) do
+        recursive_find_neighbors(nearby)
+        --count = count + 1
+      end
     end
   end
   recursive_find_neighbors(entity)
@@ -203,11 +200,18 @@ convert_nest = function(player, spawner)
   local position = spawner.position
   script_data.player_spawns[player.index] = position
   local entities = get_hive_entities(spawner)
+  local create_entity = surface.create_entity
+  local find_entities_filtered = surface.find_entities_filtered
+  local teleport_unit_away = util.teleport_unit_away
   for k, nearby in pairs (entities) do
     local deploy_name = deploy_map[nearby.name]
     if deploy_name then
-      surface.create_entity{name = deploy_name, position = nearby.position, force = force, direction = (math.random(4) - 1) * 2, raise_built = true}
+      local deployer = create_entity{name = deploy_name, position = nearby.position, force = force, direction = (math.random(4) - 1) * 2, raise_built = true}
       nearby.destroy({raise_destroy = true})
+      local area = deployer.bounding_box
+      for k, unit in pairs (find_entities_filtered{area = area, type = "unit"}) do
+        teleport_unit_away(unit, area)
+      end
     elseif nearby.type == "unit" or nearby.type == "turret" then
       nearby.force = force
     end
@@ -362,8 +366,9 @@ local check_hivemind_disband = function()
 
   local destroy_map_type =
   {
-    radar = true,
-    ["entity-ghost"] = true
+    ["entity-ghost"] = true,
+    lab = true,
+    ["mining-drill"] = true
   }
 
   local params = {force = force, type = {"turret", "unit", "unit-spawner", "entity-ghost", "radar", "assembling-machine"}}

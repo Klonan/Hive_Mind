@@ -31,9 +31,8 @@ drill.order = "noob"
 drill.collision_box = util.area({0,0}, 1.01)
 drill.selection_box = util.area({0,0}, 1.5)
 drill.mining_speed = 0
-drill.energy_source = {type = "void"}
+drill.energy_source = {type = "void", emissions_per_minute = 60}
 drill.resource_searching_radius = 0.5
-drill.emissions_per_second = 1
 drill.collision_mask = util.buildable_on_creep_collision_mask()
 drill.resource_categories = {"basic-fluid"}
 drill.vector_to_place_result = {0, 0}
