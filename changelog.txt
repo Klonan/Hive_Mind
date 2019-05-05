@@ -11,6 +11,7 @@ Date: 2019-05-05
     - Fixed not resetting hivemind technologies when PvP round changes.
     - Fixed biters getting stuck in converted hives.
     - Fixed pollution drill wouldn't show in pollution statistics.
+    - Fixed converted nests would be far away from the origin position.
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.2
 Date: 2019-05-04
