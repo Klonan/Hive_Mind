@@ -17,7 +17,7 @@ local make_damage_tech = function(category, icons)
     prerequisites = {},
     unit =
     {
-      count_formula = "2^(L-1)*500",
+      count_formula = "2^(L-1)*1000",
       ingredients =
       {
         {names.pollution_proxy, 1}

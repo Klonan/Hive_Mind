@@ -31,7 +31,7 @@ drill.order = "noob"
 drill.collision_box = util.area({0,0}, 1.01)
 drill.selection_box = util.area({0,0}, 1.5)
 drill.mining_speed = 0
-drill.energy_source = {type = "void", emissions_per_minute = 60}
+drill.energy_source = {type = "void", emissions_per_minute = 30}
 drill.resource_searching_radius = 0.5
 drill.collision_mask = util.buildable_on_creep_collision_mask()
 drill.resource_categories = {"basic-fluid"}
@@ -57,7 +57,7 @@ local item =
   type = "item",
   name = name,
   localised_name = {name},
-  localised_description = {"requires-pollution", names.required_pollution[name]},
+  localised_description = {"requires-pollution", names.required_pollution[name] * names.pollution_recipe_scale},
   icons = drill.icons,
   icon = drill.icon,
   icon_size = drill.icon_size,

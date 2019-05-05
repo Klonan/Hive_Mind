@@ -70,8 +70,9 @@ local deploy_unit = function(source, prototype)
 end
 
 
--- so if it takes 2 pollution to send a unit, the energy required is 10
-local pollution_scale = 5
+-- so if it takes 1 pollution to send a unit, the energy required is 1 * pollution_scale
+local pollution_scale = shared.pollution_progress_scale
+local pollution_recipe_scale = shared.pollution_recipe_scale
 
 --Max pollution each spawner can absorb is 10% of whatever the chunk has.
 local pollution_percent_to_take = 0.1
@@ -86,6 +87,12 @@ local get_prototype = function(name)
   prototype = game.entity_prototypes[name]
   prototype_cache[name] = prototype
   return prototype
+end
+
+local required_pollution = shared.required_pollution
+
+local get_required_pollution = function(name)
+  return required_pollution[name] * pollution_recipe_scale
 end
 
 local min = math.min
@@ -131,12 +138,12 @@ local check_spawner = function(spawner_data)
     end
 
     local energy = recipe.energy
-    local total_pollution_needed_to_spawn = energy * pollution_scale * get_enemy_attack_pollution_consumption_modifier()
+    local total_pollution_needed_to_spawn = energy * pollution_scale
     local current_pollution = current_energy * total_pollution_needed_to_spawn
 
     pollution_to_take = min(pollution_to_take, (total_pollution_needed_to_spawn - current_pollution))
 
-    current_energy = current_energy + ((pollution_to_take / pollution_scale) / get_enemy_attack_pollution_consumption_modifier())
+    current_energy = current_energy + (pollution_to_take / pollution_scale)
     entity.crafting_progress = current_energy
 
     surface.pollute(position, -pollution_to_take)
@@ -217,7 +224,6 @@ local is_idle = function(unit_number)
   return not (data.not_idle_units[unit_number]) --and remote.call("unit_control", "is_unit_idle", unit.unit_number)
 end
 
-local required_pollution = shared.required_pollution
 
 local distance = util.distance
 
@@ -250,7 +256,7 @@ local check_ghost = function(ghost_data)
   if ghost_data.required_pollution > 0 then
     for k, unit in pairs (surface.find_units{area = entity.bounding_box, force = entity.force, condition = "same"}) do
       local prototype = get_prototype(unit.name)
-      local pollution = prototype.pollution_to_join_attack
+      local pollution = prototype.pollution_to_join_attack * pollution_recipe_scale
       if unit.destroy({raise_destroy = true}) then
         ghost_data.required_pollution = ghost_data.required_pollution - pollution
         if ghost_data.required_pollution <= 0 then break end
@@ -278,7 +284,7 @@ local check_ghost = function(ghost_data)
     if is_idle(unit_number) then
       --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "IDLE"}
       unit.set_command(command)
-      local pollution = unit.prototype.pollution_to_join_attack
+      local pollution = unit.prototype.pollution_to_join_attack * pollution_recipe_scale
       needed_pollution = needed_pollution - pollution
       data.not_idle_units[unit_number] = {tick = game.tick, ghost_data = ghost_data}
       if needed_pollution <= 0 then break end
@@ -296,11 +302,11 @@ local check_ghost = function(ghost_data)
   end
 
   if progress and rendering.is_valid(progress) then
-    rendering.set_text(progress, math.floor((1 - (ghost_data.required_pollution / required_pollution[entity.ghost_name])) * 100) .. "%")
+    rendering.set_text(progress, math.floor((1 - (ghost_data.required_pollution / get_required_pollution(entity.ghost_name))) * 100) .. "%")
   else
     progress = rendering.draw_text
     {
-      text = math.floor((1 - (ghost_data.required_pollution / required_pollution[entity.ghost_name])) * 100) .. "%",
+      text = math.floor((1 - (ghost_data.required_pollution / get_required_pollution(entity.ghost_name))) * 100) .. "%",
       surface = surface,
       target = entity,
       --target_offset = {0, 1},
@@ -393,7 +399,7 @@ local spawner_ghost_built = function(entity, player_index)
     return
   end
 
-  local pollution = required_pollution[entity.ghost_name]
+  local pollution = get_required_pollution(entity.ghost_name)
   local ghost_data = {entity = entity, required_pollution = pollution}
   local update_tick = entity.unit_number % ghost_update_interval
   data.ghost_tick_check[update_tick] = data.ghost_tick_check[update_tick] or {}
@@ -571,19 +577,11 @@ local redistribute_on_tick_checks = function()
 end
 
 local migrate_proxies = function()
+  if not data.proxies then return end
   local types = {"assembling-machine", "lab", "mining-drill"}
   for k, surface in pairs (game.surfaces) do
     for k, entity in pairs (surface.find_entities_filtered{type = types, force = "hivemind"}) do
       entity.destructible = true
-    end
-  end
-  local proxies = data.proxies
-  if not proxies then return end
-  for k, proxy in pairs (proxies) do
-    if proxy.valid then
-      proxy.destroy()
-    elseif proxy.entity and proxy.entity.valid then
-      proxy.entity.destroy()
     end
   end
   data.proxies = nil
@@ -619,7 +617,7 @@ unit_deployment.on_configuration_changed = function()
   check_update_pop_cap()
   rendering.clear("Hive_Mind")
   redistribute_on_tick_checks()
-  pcall(migrate_proxies)
+  migrate_proxies()
   data.max_pop_count = data.max_pop_count or 1000
 end
 

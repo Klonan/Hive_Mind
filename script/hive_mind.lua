@@ -9,19 +9,6 @@ local script_data =
   force_balance = false
 }
 
-
-local recipe_evolution_factors =
-{
-  ["small-biter"] = 0,
-  ["medium-biter"] = 0.2,
-  ["big-biter"] = 0.5,
-  ["behemoth-biter"] = 0.9,
-  ["small-spitter"] = 0,
-  ["medium-spitter"] = 0.2,
-  ["big-spitter"] = 0.5,
-  ["behemoth-spitter"] = 0.9,
-}
-
 local convert_nest
 
 local be_friends = function(force_1, force_2)
@@ -41,9 +28,10 @@ local is_hivemind_technology = function(technology)
   return false
 end
 
-local create_hivemind_force = function()
-
-  local force = game.create_force("hivemind")
+local reset_hivemind_force = function()
+  local force = game.forces.hivemind
+  if not force then return end
+  force.reset()
 
   force.share_chart = true
 
@@ -64,6 +52,13 @@ local create_hivemind_force = function()
     recipe.enabled = names.default_unlocked[recipe.name]
   end
 
+end
+
+
+local create_hivemind_force = function()
+
+  local force = game.create_force("hivemind")
+  reset_hivemind_force()
   return force
 end
 
@@ -657,16 +652,24 @@ local events =
 }
 
 local on_wave_defense_round_started = function(event)
-  local enemy_force = game.forces.enemy
-  be_friends(enemy_force, get_hivemind_force())
-  enemy_force.share_chart = true
+  reset_hivemind_force()
   set_map_settings()
+end
+
+local on_pvp_round_start = function(event)
+  reset_hivemind_force()
 end
 
 local register_wave_defense = function()
   if not remote.interfaces["wave_defense"] then return end
   local wave_defense_events = remote.call("wave_defense", "get_events")
   events[wave_defense_events.on_round_started] = on_wave_defense_round_started
+end
+
+local register_pvp = function()
+  if not remote.interfaces["pvp"] then return end
+  local pvp_events = remote.call("pvp", "get_events")
+  events[pvp_events.on_round_start] = on_pvp_round_start
 end
 
 local lib = {}
@@ -680,12 +683,14 @@ lib.on_init = function()
   end
   set_map_settings()
   register_wave_defense()
+  register_pvp()
   get_hivemind_force()
 end
 
 lib.on_load = function()
   script_data = global.hive_mind or script_data
   register_wave_defense()
+  register_pvp()
 end
 
 lib.on_configuration_changed = function()

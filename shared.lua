@@ -62,7 +62,13 @@ data.needs_creep =
   ["small-worm-turret"] =true,
   ["medium-worm-turret"] = true,
   ["big-worm-turret"] = true,
-  ["behemoth-worm-turret"] = true
+  ["behemoth-worm-turret"] = true,
+  [data.creep_tumor] = true,
+  [data.pollution_drill] = true,
+  [data.pollution_lab] = true,
 }
+
+data.pollution_recipe_scale = 2
+data.pollution_progress_scale = 2
 
 return data

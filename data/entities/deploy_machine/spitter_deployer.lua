@@ -12,7 +12,7 @@ end
 local name = names.deployers.spitter_deployer
 machine.name = name
 machine.localised_name = {name}
-machine.localised_description = {"requires-pollution", shared.required_pollution[name]}
+machine.localised_description = {"requires-pollution", shared.required_pollution[name] * shared.pollution_recipe_scale}
 machine.icon = graphics.icon
 machine.icon_size = graphics.icon_size
 machine.collision_box = util.area({0,0}, 2.5)
@@ -76,7 +76,7 @@ local item =
   type = "item",
   name = name,
   localised_name = {name},
-  localised_description = {"requires-pollution", shared.required_pollution[name]},
+  localised_description = machine.localised_description,
   icon = machine.icon,
   icon_size = machine.icon_size,
   flags = {},
