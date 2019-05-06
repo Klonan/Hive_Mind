@@ -53,6 +53,8 @@ end
 
 for k, v in pairs (data.raw.item) do
   if v.place_as_tile then
-    table.insert(v.place_as_tile.condition, "item-layer")
+    table.insert(v.place_as_tile.condition, "floor-layer")
   end
 end
+
+--data.raw.item.landfill.place_as_tile.condition = {"floor-layer"}

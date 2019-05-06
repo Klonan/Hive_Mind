@@ -23,7 +23,7 @@ machine.crafting_speed = 1
 machine.ingredient_count = 100
 machine.module_specification = nil
 machine.minable = {result = name, mining_time = 5}
-machine.flags = {--[["placeable-off-grid",]] "placeable-neutral", "player-creation", "no-automated-item-removal", "not-deconstructable"}
+machine.flags = {--[["placeable-off-grid",]] "placeable-neutral", "player-creation", "no-automated-item-removal"}
 machine.is_deployer = true
 machine.next_upgrade = nil
 machine.dying_sound = graphics.dying_sound
