@@ -122,7 +122,7 @@ local make_biter = function(biter)
   biter.radar_range = biter.radar_range or 2
   make_biter_item(biter, names.deployers.biter_deployer)
   make_biter_recipe(biter, names.deployers.biter_deployer)
-  make_unlock_technology(biter, biter.pollution_to_join_attack * shared.pollution_recipe_scale * 250)
+  make_unlock_technology(biter, biter.pollution_to_join_attack * shared.pollution_recipe_scale * 200)
   biter.ai_settings = biter.ai_settings or {}
   biter.ai_settings.destroy_when_commands_fail = false
   biter.friendly_map_color = {b = 1, g = 1}
@@ -135,7 +135,7 @@ local make_spitter = function(biter)
   biter.radar_range = biter.radar_range or 2
   make_biter_item(biter, names.deployers.spitter_deployer)
   make_biter_recipe(biter, names.deployers.spitter_deployer)
-  make_unlock_technology(biter, biter.pollution_to_join_attack * shared.pollution_recipe_scale * 250)
+  make_unlock_technology(biter, biter.pollution_to_join_attack * shared.pollution_recipe_scale * 200)
   biter.ai_settings = biter.ai_settings or {}
   biter.ai_settings.destroy_when_commands_fail = false
   biter.friendly_map_color = {b = 1, g = 1}
@@ -149,7 +149,7 @@ local make_worm = function(turret)
   if not shared.required_pollution[turret.name] then return end
   make_worm_item(turret)
   make_worm_recipe(turret, worm_category, shared.required_pollution[turret.name] * shared.pollution_recipe_scale)
-  make_unlock_technology(turret, shared.required_pollution[turret.name] * shared.pollution_recipe_scale * 250)
+  make_unlock_technology(turret, shared.required_pollution[turret.name] * shared.pollution_recipe_scale * 100)
   table.insert(turret.flags, "player-creation")
   turret.create_ghost_on_death = false
   turret.friendly_map_color = {b = 1, g = 0.5}

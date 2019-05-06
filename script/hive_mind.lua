@@ -306,7 +306,8 @@ join_hive = function(player)
     player.print({"cant-find-spawner"})
     return
   end
-  if position then
+  if player.surface ~= surface then
+    player.character = nil
     player.teleport(position, surface)
   end
   local get_quick_bar_slot = player.get_quick_bar_slot

@@ -37,10 +37,10 @@ data.required_pollution =
   [data.creep_tumor] = 50,
   [data.pollution_lab] = 150,
   [data.pollution_drill] = 100,
-  ["small-worm-turret"] = 150,
-  ["medium-worm-turret"] = 350,
+  ["small-worm-turret"] = 200,
+  ["medium-worm-turret"] = 400,
   ["big-worm-turret"] = 800,
-  ["behemoth-worm-turret"] = 2000
+  ["behemoth-worm-turret"] = 1600
 }
 
 data.needs_proxy_type =
