@@ -128,6 +128,8 @@ local make_biter = function(biter)
   biter.friendly_map_color = {b = 1, g = 1}
   biter.affected_by_tiles = biter.affected_by_tiles or true
   biter.localised_description = {"requires-pollution", biter.pollution_to_join_attack * shared.pollution_recipe_scale}
+  --biter.corpse = nil
+  biter.dying_explosion = nil
 end
 
 local make_spitter = function(biter)
@@ -141,6 +143,8 @@ local make_spitter = function(biter)
   biter.friendly_map_color = {b = 1, g = 1}
   biter.affected_by_tiles = biter.affected_by_tiles or true
   biter.localised_description = {"requires-pollution", biter.pollution_to_join_attack * shared.pollution_recipe_scale}
+  --biter.corpse = nil
+  biter.dying_explosion = nil
 end
 
 local worm_ammo_category = util.ammo_category("worm-biological")
@@ -219,4 +223,8 @@ end
 
 for name, spawner in pairs (data.raw["unit-spawner"]) do
   spawner.collision_mask = {"water-tile", "player-layer", "train-layer"}
+end
+
+for k, corpse in pairs (data.raw.corpse) do
+  corpse.time_before_removed = 60 * 60
 end

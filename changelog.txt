@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.3.4
+Date: 2019-05-07
+  Changes:
+    - Attempt to balance and optimize flamethrower turrets: Removed fire sticker and damage on hit.
+    - Removed biter dying explosion as it was causing performance issues with flamethrowers.
+---------------------------------------------------------------------------------------------------
 Version: 0.3.3
 Date: 2019-05-05
   Changes:
