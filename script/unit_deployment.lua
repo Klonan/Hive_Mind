@@ -70,10 +70,6 @@ local deploy_unit = function(source, prototype)
 end
 
 
--- so if it takes 1 pollution to send a unit, the energy required is 1 * pollution_scale
-local pollution_scale = shared.pollution_progress_scale
-local pollution_recipe_scale = shared.pollution_recipe_scale
-
 --Max pollution each spawner can absorb is 10% of whatever the chunk has.
 local pollution_percent_to_take = 0.1
 
@@ -90,14 +86,17 @@ local get_prototype = function(name)
 end
 
 local required_pollution = shared.required_pollution
+local pollution_cost_multiplier = shared.pollution_cost_multiplier
 
 local get_required_pollution = function(name)
-  return required_pollution[name] * pollution_recipe_scale
+  return required_pollution[name] * pollution_cost_multiplier
 end
 
 local min = math.min
 
 local progress_color = {r = 0.8, g = 0.8}
+
+-- 1 pollution = 1 energy of crafting
 
 local check_spawner = function(spawner_data)
   local entity = spawner_data.entity
@@ -127,9 +126,9 @@ local check_spawner = function(spawner_data)
   local surface = entity.surface
   local position = entity.position
 
-  local current_energy = entity.crafting_progress
+  local progress = entity.crafting_progress
 
-  if current_energy < 1 then
+  if progress < 1 then
 
     local pollution = surface.get_pollution(position)
     local pollution_to_take = pollution * pollution_percent_to_take
@@ -138,13 +137,15 @@ local check_spawner = function(spawner_data)
     end
 
     local energy = recipe.energy
-    local total_pollution_needed_to_spawn = energy * pollution_scale
-    local current_pollution = current_energy * total_pollution_needed_to_spawn
+    local current_energy = energy * progress
 
-    pollution_to_take = min(pollution_to_take, (total_pollution_needed_to_spawn - current_pollution))
+    pollution_to_take = min(pollution_to_take, energy - current_energy)
 
-    current_energy = current_energy + (pollution_to_take / pollution_scale)
-    entity.crafting_progress = current_energy
+    current_energy = current_energy + pollution_to_take
+
+    progress = current_energy / energy
+
+    entity.crafting_progress = progress
 
     surface.pollute(position, -pollution_to_take)
     game.pollution_statistics.on_flow(entity.name, -pollution_to_take)
@@ -152,22 +153,22 @@ local check_spawner = function(spawner_data)
   end
 
 
-  local progress = spawner_data.progress
-  if type(progress) == "table" then
-    if progress.valid then
-      progress.destroy()
+  local progress_bar = spawner_data.progress
+  if type(progress_bar) == "table" then
+    if progress_bar.valid then
+      progress_bar.destroy()
     end
     --Old time it was a flying text... can remove in a while
-    progress = nil
+    progress_bar = nil
     spawner_data.progress = nil
   end
 
-  if progress and rendering.is_valid(progress) then
-    rendering.set_text(progress, math.floor(current_energy * 100) .. "%")
+  if progress_bar and rendering.is_valid(progress_bar) then
+    rendering.set_text(progress_bar, math.floor(progress * 100) .. "%")
   else
-    progress = rendering.draw_text
+    progress_bar = rendering.draw_text
     {
-      text = math.floor(current_energy * 100) .. "%",
+      text = math.floor(progress * 100) .. "%",
       surface = surface,
       target = entity,
       --target_offset = {0, 1},
@@ -176,25 +177,12 @@ local check_spawner = function(spawner_data)
       forces = {force},
       scale = 3
     }
-    spawner_data.progress = progress
+    spawner_data.progress = progress_bar
   end
 
 
 end
 
---[[    text :: LocalisedString: The text to display.
-    surface :: SurfaceSpecification
-    target :: Position or LuaEntity
-    target_offset :: Vector (optional): Only used if target is a LuaEntity.
-    color :: Color
-    scale :: double (optional)
-    font :: string (optional): Name of font to use. Defaults to the same font as flying-text.
-    time_to_live :: uint (optional): In ticks. Defaults to living forever.
-    forces :: array of ForceSpecification (optional): The forces that this object is rendered to.
-    players :: array of PlayerSpecification (optional): The players that this object is rendered to.
-    orientation :: float (optional): The orientation of the text. Default is 0.
-    alignment :: string (optional): Defaults to "left". Other options are "right" and "center".
-    scale_with_zoom :: boolean (optional): Defaults to false. If true, the text is always the same size, regardless of player zoom.]]
 local teleport_unit_away = util.teleport_unit_away
 
 local try_to_revive_entity = function(entity)
@@ -256,7 +244,7 @@ local check_ghost = function(ghost_data)
   if ghost_data.required_pollution > 0 then
     for k, unit in pairs (surface.find_units{area = entity.bounding_box, force = entity.force, condition = "same"}) do
       local prototype = get_prototype(unit.name)
-      local pollution = prototype.pollution_to_join_attack * pollution_recipe_scale
+      local pollution = prototype.pollution_to_join_attack * pollution_cost_multiplier
       if unit.destroy({raise_destroy = true}) then
         ghost_data.required_pollution = ghost_data.required_pollution - pollution
         if ghost_data.required_pollution <= 0 then break end
@@ -284,7 +272,7 @@ local check_ghost = function(ghost_data)
     if is_idle(unit_number) then
       --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "IDLE"}
       unit.set_command(command)
-      local pollution = unit.prototype.pollution_to_join_attack * pollution_recipe_scale
+      local pollution = unit.prototype.pollution_to_join_attack * pollution_cost_multiplier
       needed_pollution = needed_pollution - pollution
       data.not_idle_units[unit_number] = {tick = game.tick, ghost_data = ghost_data}
       if needed_pollution <= 0 then break end

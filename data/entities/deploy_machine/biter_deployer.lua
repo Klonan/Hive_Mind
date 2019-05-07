@@ -5,21 +5,21 @@ local shared = require("shared")
 
 for k, animation in pairs (graphics.animations) do
   for k, layer in pairs (animation.layers) do
-    layer.animation_speed = 0.5
-    layer.hr_version.animation_speed = 0.5
+    layer.animation_speed = 0.5 / shared.deployer_speed_modifier
+    layer.hr_version.animation_speed = 0.5 / shared.deployer_speed_modifier
   end
 end
 
 local name = names.deployers.biter_deployer
 machine.name = name
 machine.localised_name = {name}
-machine.localised_description = {"requires-pollution", shared.required_pollution[name] * shared.pollution_recipe_scale}
+machine.localised_description = {"requires-pollution", shared.required_pollution[name] * shared.pollution_cost_multiplier}
 machine.icon = graphics.icon
 machine.icon_size = graphics.icon_size
 machine.collision_box = util.area({0,0}, 2.5)
 machine.selection_box = util.area({0,0}, 2)
 machine.crafting_categories = {name}
-machine.crafting_speed = 1
+machine.crafting_speed = shared.deployer_speed_modifier
 machine.ingredient_count = 100
 machine.module_specification = nil
 machine.minable = {result = name, mining_time = 5}

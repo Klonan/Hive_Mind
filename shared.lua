@@ -68,7 +68,7 @@ data.needs_creep =
   [data.pollution_lab] = true,
 }
 
-data.pollution_recipe_scale = 2
-data.pollution_progress_scale = 2
+data.pollution_cost_multiplier = 1
+data.deployer_speed_modifier = 0.25
 
 return data
