@@ -88,7 +88,7 @@ local lab =
   max_health = 150,
   corpse = nil,
   dying_explosion = spawner_graphics.dying_explosion,
-  collision_box = util.area({0,0}, 3.5),
+  collision_box = util.area({0,0}, 3),
   selection_box = util.area({0,0}, 3),
   collision_mask = util.buildable_on_creep_collision_mask(),
   light = {intensity = 1, size = 20, color = tint},
@@ -113,7 +113,7 @@ local subgroup =
 {
   type = "item-subgroup",
   name = "pollution-lab-subgroup",
-  group = "combat",
+  group = "enemies",
   order = "b"
 }
 

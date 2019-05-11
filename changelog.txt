@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.3.6
+Date: 2019-05-11
+  Changes:
+    - Tweaked the worm collision boxes so they leave space for biters to path between them.
+    - Reduced pollution lab collision box by 1.
+    - Fixed biter recipes were shown to normal players.
+    - Moved all the biter recipes to the 'enemies' item group.
+---------------------------------------------------------------------------------------------------
 Version: 0.3.5
 Date: 2019-05-07
   Changes:

@@ -28,7 +28,7 @@ local make_biter_recipe = function(prototype, category)
     type = "recipe",
     name = prototype.name,
     localised_name = prototype.localised_name,
-    enabled = default_unlocked[prototype.name],
+    enabled = false,
     ingredients = {},
     energy_required = prototype.pollution_to_join_attack * shared.pollution_cost_multiplier,
     result = prototype.name,
@@ -81,7 +81,7 @@ local make_worm_recipe = function(prototype, category, energy)
     type = "recipe",
     name = prototype.name,
     localised_name = prototype.localised_name,
-    enabled = default_unlocked[prototype.name],
+    enabled = false,
     ingredients = {},
     energy_required = math.huge,
     result = prototype.name,
@@ -95,7 +95,7 @@ local worm_subgroup =
 {
   type = "item-subgroup",
   name = "worm-subgroup",
-  group = "combat",
+  group = "enemies",
   order = "d"
 }
 data:extend{worm_subgroup}
@@ -194,7 +194,7 @@ range_worm_medium   = 30
 range_worm_big      = 38
 range_worm_behemoth = 48
 ]]
---Laser turret is 24, flamethrower is 30, so lets make behemoth 40 and scale the rest accordingly
+--Laser turret is 24, flamethrower is 30, so lets make behemoth 35 and scale the rest accordingly
 
 turrets["small-worm-turret"].attack_parameters.range = 20
 turrets["medium-worm-turret"].attack_parameters.range = 25
@@ -214,6 +214,12 @@ turrets["medium-worm-turret"].attack_parameters.damage_modifier = 30
 turrets["big-worm-turret"].attack_parameters.damage_modifier = 45
 turrets["behemoth-worm-turret"].attack_parameters.damage_modifier = 60
 --error(serpent.block(turrets["behemoth-worm-turret"].attack_parameters))
+
+
+turrets["small-worm-turret"].collision_box = util.area({0,0}, 1)
+turrets["medium-worm-turret"].collision_box = util.area({0,0}, 1)
+turrets["big-worm-turret"].collision_box = util.area({0,0}, 1.5)
+turrets["behemoth-worm-turret"].collision_box = util.area({0,0}, 1.5)
 
 for name, turret in pairs (turrets) do
   if turret.name:find("worm%-turret") then

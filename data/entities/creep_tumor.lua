@@ -37,7 +37,7 @@ local subgroup =
 {
   type = "item-subgroup",
   name = "creep-tumor-subgroup",
-  group = "combat",
+  group = "enemies",
   order = "a"
 }
 

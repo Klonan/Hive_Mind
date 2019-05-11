@@ -28,7 +28,7 @@ machine.is_deployer = true
 machine.next_upgrade = nil
 machine.dying_sound = graphics.dying_sound
 machine.corpse = graphics.corpse
-machine.dying_explosion = graphics.dying_explosion
+--machine.dying_explosion = graphics.dying_explosion
 machine.collision_mask = {"water-tile", "player-layer", "train-layer"}
 
 machine.open_sound =
@@ -93,7 +93,7 @@ local subgroup =
 {
   type = "item-subgroup",
   name = name,
-  group = "combat",
+  group = "enemies",
   order = "b"
 }
 --[[

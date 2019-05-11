@@ -48,7 +48,7 @@ local subgroup =
 {
   type = "item-subgroup",
   name = "pollution-drill-subgroup",
-  group = "combat",
+  group = "enemies",
   order = "b"
 }
 
