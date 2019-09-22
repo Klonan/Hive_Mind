@@ -3,6 +3,7 @@ Version: 0.3.7
 Date: 2019-09-22
   Changes:
     - Fixed errors caused by 0.17.69 changes.
+    - Added a /popcap [number] command for setting popcap runtime (admins only).
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.6
 Date: 2019-05-11

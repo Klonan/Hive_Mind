@@ -595,6 +595,13 @@ local events =
   [defines.events.on_ai_command_completed] = on_ai_command_completed
 }
 
+commands.add_command("popcap", "Set the popcap for hive mind biters", function(command)
+  local player = game.get_player(command.player_index)
+  if not player.admin then player.print("Setting popcap is only for admins") return end
+  if not tonumber(command.parameter) then player.print("Popcap must be a number") return end
+  data.max_pop_count = tonumber(command.parameter)
+end)
+
 local unit_deployment = {}
 
 unit_deployment.get_events = function() return events end
