@@ -95,6 +95,7 @@ end
 local min = math.min
 
 local progress_color = {r = 0.8, g = 0.8}
+local spawning_color = {r = 0, g = 1, b = 0, a = 0.5}
 
 -- 1 pollution = 1 energy of crafting
 
@@ -175,7 +176,8 @@ local check_spawner = function(spawner_data)
       color = progress_color,
       alignment = "center",
       forces = {force},
-      scale = 3
+      scale = 3,
+      only_in_alt_mode = true
     }
     spawner_data.progress = progress_bar
   end
@@ -186,6 +188,7 @@ end
 local teleport_unit_away = util.teleport_unit_away
 
 local try_to_revive_entity = function(entity)
+  if not (entity and entity.valid) then return true end
   local force = entity.force
   local name = entity.ghost_name
   local revived = entity.revive({raise_revive = true})
@@ -243,11 +246,13 @@ local check_ghost = function(ghost_data)
 
   if ghost_data.required_pollution > 0 then
     for k, unit in pairs (surface.find_units{area = entity.bounding_box, force = entity.force, condition = "same"}) do
-      local prototype = get_prototype(unit.name)
-      local pollution = prototype.pollution_to_join_attack * pollution_cost_multiplier
-      if unit.destroy({raise_destroy = true}) then
-        ghost_data.required_pollution = ghost_data.required_pollution - pollution
-        if ghost_data.required_pollution <= 0 then break end
+      if unit.valid then
+        local prototype = get_prototype(unit.name)
+        local pollution = prototype.pollution_to_join_attack * pollution_cost_multiplier
+        if unit.destroy({raise_destroy = true}) then
+          ghost_data.required_pollution = ghost_data.required_pollution - pollution
+          if ghost_data.required_pollution <= 0 then break end
+        end
       end
     end
   end
@@ -268,14 +273,16 @@ local check_ghost = function(ghost_data)
 
   local needed_pollution = ghost_data.required_pollution
   for k, unit in pairs (surface.find_entities_filtered{position = origin, radius = r, force = entity.force, type = "unit"}) do
-    local unit_number = unit.unit_number
-    if is_idle(unit_number) then
-      --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "IDLE"}
-      unit.set_command(command)
-      local pollution = unit.prototype.pollution_to_join_attack * pollution_cost_multiplier
-      needed_pollution = needed_pollution - pollution
-      data.not_idle_units[unit_number] = {tick = game.tick, ghost_data = ghost_data}
-      if needed_pollution <= 0 then break end
+    if unit.valid then
+      local unit_number = unit.unit_number
+      if is_idle(unit_number) then
+        --entity.surface.create_entity{name = "flying-text", position = unit.position, text = "IDLE"}
+        unit.set_command(command)
+        local pollution = unit.prototype.pollution_to_join_attack * pollution_cost_multiplier
+        needed_pollution = needed_pollution - pollution
+        data.not_idle_units[unit_number] = {tick = game.tick, ghost_data = ghost_data}
+        if needed_pollution <= 0 then break end
+      end
     end
   end
 
@@ -298,10 +305,11 @@ local check_ghost = function(ghost_data)
       surface = surface,
       target = entity,
       --target_offset = {0, 1},
-      color = progress_color,
+      color = spawning_color,
       alignment = "center",
       forces = {entity.force},
-      scale = 3
+      scale = 3,
+      only_in_alt_mode = true
     }
     ghost_data.progress = progress
   end
@@ -318,7 +326,8 @@ local check_ghost = function(ghost_data)
       forces = {entity.force},
       draw_on_ground = true,
       filled = false,
-      radius = r
+      radius = r,
+      only_in_alt_mode = true
     }
     ghost_data.radius = radius
   end
