@@ -59,14 +59,14 @@ local deploy_unit = function(source, prototype)
   local on_flow = force.item_production_statistics.on_flow
   local deploy_position = find_non_colliding_position(name, position, 0, 1)
   local blood = {name = "blood-explosion-big", position = deploy_position}
-  local create_param = {name = name, position = deploy_position, force = force, direction = direction}
+  local create_param = {name = name, position = deploy_position, force = force, direction = direction, raise_built = true}
   create_entity(blood)
   local unit = create_entity(create_param)
-  on_flow(name, 1)
-  script.raise_event(defines.events.on_entity_spawned, {entity = unit, spawner = source})
-  local index = force.index
-  data.pop_count[index] = data.pop_count[index] + 1
-  return deployed
+  if unit and unit.valid then
+    on_flow(name, 1)
+    local index = force.index
+    data.pop_count[index] = data.pop_count[index] + 1
+  end
 end
 
 
