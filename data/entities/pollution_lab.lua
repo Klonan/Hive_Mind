@@ -1,6 +1,6 @@
 
 local name = names.pollution_lab
-local util = require("data/tf_util/tf_util")
+local util = require("__Hive_Mind__/data/tf_util/tf_util")
 
 local graphics = util.copy(data.raw.lab.lab)
 --error(serpent.block(graphics))

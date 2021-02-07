@@ -1,4 +1,4 @@
-local util = require("data/tf_util/tf_util")
+local util = require("__Hive_Mind__/data/tf_util/tf_util")
 local name = names.creep
 local creep_color = {r = 0.3, b = 0.3, g = 0.15}
 local creep = util.copy(data.raw.tile["sand-1"])

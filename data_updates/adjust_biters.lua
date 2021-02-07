@@ -1,7 +1,7 @@
 
 shared = require("shared")
 
-local util = require("data/tf_util/tf_util")
+local util = require("__Hive_Mind__/data/tf_util/tf_util")
 
 local default_unlocked = shared.default_unlocked
 
