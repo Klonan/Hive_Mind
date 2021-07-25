@@ -12,6 +12,8 @@ local data =
   max_pop_count = 1000
 }
 
+local unit_spawned_event
+
 local get_destroy_factor = function()
   return data.destroy_factor
 end
@@ -66,6 +68,7 @@ local deploy_unit = function(source, prototype)
     on_flow(name, 1)
     local index = force.index
     data.pop_count[index] = data.pop_count[index] + 1
+    script.raise_event(unit_spawned_event, {entity = unit, spawner = source})
   end
 end
 
@@ -115,7 +118,9 @@ local check_spawner = function(spawner_data)
 
   local force = entity.force
 
-  if can_spawn_units(force.index) then
+  local can_spawn = can_spawn_units(force.index)
+  entity.active = can_spawn
+  if can_spawn then
     local recipe_name = recipe.name
     local item_count = entity.get_item_count(recipe_name)
     if item_count > 0 then
@@ -524,24 +529,6 @@ local on_tick = function(event)
   check_update_pop_cap(event.tick)
 end
 
-local on_entity_died = function(event)
-  error("Not used")
-  local entity = event.entity
-  if not (entity and entity.valid) then return end
-  local unit_number = entity.unit_number
-  if not unit_number then return end
-  local spawner = data.proxies[unit_number]
-  if not spawner then return end
-  entity.destroy()
-  data.proxies[unit_number] = nil
-
-  if spawner and spawner.valid then
-    spawner.destructible = true
-    spawner.force.evolution_factor = spawner.force.evolution_factor + (1 * get_destroy_factor())
-    spawner.die()
-  end
-end
-
 local on_ai_command_completed = function(event)
   local command_data = data.not_idle_units[event.unit_number]
   if command_data then
@@ -591,7 +578,6 @@ local events =
   [defines.events.script_raised_revive] = on_built_entity,
   [defines.events.script_raised_built] = on_built_entity,
   [defines.events.on_tick] = on_tick,
-  --[defines.events.on_entity_died] = on_entity_died,
   [defines.events.on_ai_command_completed] = on_ai_command_completed
 }
 
@@ -602,6 +588,11 @@ commands.add_command("popcap", "Set the popcap for hive mind biters", function(c
   data.max_pop_count = tonumber(command.parameter)
 end)
 
+local setup_spawn_event = function()
+  local control_events = remote.call("unit_control", "get_events")
+  unit_spawned_event = control_events.on_unit_spawned
+end
+
 local unit_deployment = {}
 
 unit_deployment.get_events = function() return events end
@@ -610,10 +601,12 @@ unit_deployment.on_init = function()
   global.unit_deployment = global.unit_deployment or data
   check_update_map_settings()
   check_update_pop_cap()
+  setup_spawn_event()
 end
 
 unit_deployment.on_load = function()
   data = global.unit_deployment
+  setup_spawn_event()
 end
 
 unit_deployment.on_configuration_changed = function()
