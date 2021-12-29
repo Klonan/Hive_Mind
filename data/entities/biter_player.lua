@@ -1,4 +1,5 @@
 local shared = require("shared")
+local util = require("__Hive_Mind__/data/tf_util/tf_util")
 
 local ugly_hack = function(layers)
   for k, layer in pairs (layers) do
